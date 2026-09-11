@@ -610,10 +610,10 @@
         </section>
 
 
-        <!-- ==================================
-             PEDIDOS
-        ================================== -->
 
+        <!-- ==================================
+            PEDIDOS
+        ================================== -->
         <section
             class="page-section"
             id="section-pedidos"
@@ -635,33 +635,206 @@
                     </p>
                 </div>
 
+                <button
+                    class="secondary-button"
+                    id="reloadOrders"
+                >
+                    ↻ Actualizar
+                </button>
+
             </div>
 
 
-            <div class="empty-state">
+            <!-- ==================================
+                ESTADÍSTICAS PEDIDOS
+            ================================== -->
 
-                <div class="empty-icon">
-                    🛒
+            <div class="stats-grid order-stats">
+
+                <div class="stat-card">
+
+                    <div class="stat-icon order-icon">
+                        🛒
+                    </div>
+
+                    <div class="stat-content">
+                        <span>Total pedidos</span>
+                        <strong id="ordersTotal">
+                            -
+                        </strong>
+                    </div>
+
                 </div>
 
-                <h3>
-                    Gestión de pedidos
-                </h3>
 
-                <p>
-                    La interfaz de pedidos está preparada.
-                    En el próximo paso conectaremos el listado
-                    completo con la API.
-                </p>
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        ⏳
+                    </div>
+
+                    <div class="stat-content">
+                        <span>Pendientes</span>
+                        <strong id="ordersPending">
+                            -
+                        </strong>
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        ✓
+                    </div>
+
+                    <div class="stat-content">
+                        <span>Confirmados</span>
+                        <strong id="ordersConfirmed">
+                            -
+                        </strong>
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        $
+                    </div>
+
+                    <div class="stat-content">
+                        <span>Ventas</span>
+                        <strong id="ordersSales">
+                            -
+                        </strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==================================
+                TABLA PEDIDOS
+            ================================== -->
+
+            <div class="table-card">
+
+                <div class="table-toolbar">
+
+                    <div class="search-box">
+
+                        <span>⌕</span>
+
+                        <input
+                            type="text"
+                            id="orderSearch"
+                            placeholder="Buscar por cliente o pedido..."
+                        >
+
+                    </div>
+
+
+                    <select
+                        id="orderStatusFilter"
+                        class="stock-filter"
+                    >
+                        <option value="">
+                            Todos los estados
+                        </option>
+
+                        <option value="PENDIENTE">
+                            Pendiente
+                        </option>
+
+                        <option value="CONFIRMADO">
+                            Confirmado
+                        </option>
+
+                        <option value="PREPARANDO">
+                            Preparando
+                        </option>
+
+                        <option value="ENVIADO">
+                            Enviado
+                        </option>
+
+                        <option value="ENTREGADO">
+                            Entregado
+                        </option>
+
+                        <option value="CANCELADO">
+                            Cancelado
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="table-container">
+
+                    <table class="orders-table">
+
+                        <thead>
+
+                        <tr>
+
+                            <th>
+                                Pedido
+                            </th>
+
+                            <th>
+                                Cliente
+                            </th>
+
+                            <th>
+                                Fecha
+                            </th>
+
+                            <th>
+                                Total
+                            </th>
+
+                            <th>
+                                Estado
+                            </th>
+
+                            <th>
+                                Acción
+                            </th>
+
+                        </tr>
+
+                        </thead>
+
+
+                        <tbody id="ordersTableBody">
+
+                        <tr>
+
+                            <td colspan="6">
+
+                                <div class="loading">
+                                    Cargando pedidos...
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
 
             </div>
 
         </section>
-
-
-        <!-- ==================================
-             STOCK
-        ================================== -->
 
         <!-- ==================================
             STOCK
@@ -1220,6 +1393,67 @@
             </div>
 
         </form>
+
+    </div>
+
+</div>
+
+<!-- ==========================================
+     MODAL PEDIDO
+========================================== -->
+
+<div
+    class="modal-overlay"
+    id="orderModal"
+>
+
+    <div class="modal order-modal">
+
+        <div class="modal-header">
+
+            <div>
+
+                <span class="modal-kicker">
+                    Ventas
+                </span>
+
+                <h2 id="orderModalTitle">
+                    Pedido
+                </h2>
+
+            </div>
+
+
+            <button
+                class="modal-close"
+                id="closeOrderModal"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div id="orderModalContent">
+
+            <div class="loading">
+                Cargando pedido...
+            </div>
+
+        </div>
+
+
+        <div class="modal-footer">
+
+            <button
+                type="button"
+                class="secondary-button"
+                id="cancelOrderModal"
+            >
+                Cerrar
+            </button>
+
+        </div>
 
     </div>
 

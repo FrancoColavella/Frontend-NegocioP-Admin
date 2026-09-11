@@ -17,6 +17,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let colores = [];
     let variantes = [];
 
+    let pedidos = [];
+
+    let pedidoEditando = null;
+
     let productoEditando = null;
 
 
@@ -122,6 +126,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (sectionName === "stock") {
             cargarStock();
+        }
+
+        if (sectionName === "pedidos") {
+            cargarPedidos();
         }
     }
 
@@ -1936,6 +1944,1054 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         };
 
+
+    // ==========================================
+    // PEDIDOS
+    // ==========================================
+
+    async function cargarPedidos() {
+
+        const tbody =
+            document.getElementById(
+                "ordersTableBody"
+            );
+
+        if (!tbody) {
+            return;
+        }
+
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6">
+                    <div class="loading">
+                        Cargando pedidos...
+                    </div>
+                </td>
+            </tr>
+        `;
+
+
+        try {
+
+            pedidos =
+                await apiFetch(
+                    CONFIG.ENDPOINTS.pedidos
+                );
+
+
+            renderPedidos();
+
+            actualizarEstadisticasPedidos();
+
+
+        } catch (error) {
+
+            console.error(
+                "Error cargando pedidos:",
+                error
+            );
+
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6">
+
+                        <div class="loading">
+                            No se pudieron cargar los pedidos.
+                        </div>
+
+                    </td>
+                </tr>
+            `;
+
+        }
+
+    }
+
+
+    // ==========================================
+    // RENDER PEDIDOS
+    // ==========================================
+
+    function renderPedidos() {
+
+        const tbody =
+            document.getElementById(
+                "ordersTableBody"
+            );
+
+
+        if (!tbody) {
+            return;
+        }
+
+
+        const busqueda =
+            document
+                .getElementById("orderSearch")
+                ?.value
+                ?.trim()
+                .toLowerCase() || "";
+
+
+        const estado =
+            document
+                .getElementById("orderStatusFilter")
+                ?.value || "";
+
+
+        let lista =
+            [...pedidos];
+
+
+        // BÚSQUEDA
+
+        if (busqueda) {
+
+            lista =
+                lista.filter(
+                    pedido => {
+
+                        const id =
+                            String(
+                                pedido.id || ""
+                            );
+
+
+                        const nombre =
+                            `${pedido.nombreCliente || ""}
+                            ${pedido.apellidoCliente || ""}`
+                                .toLowerCase();
+
+
+                        const email =
+                            (
+                                pedido.emailCliente ||
+                                ""
+                            ).toLowerCase();
+
+
+                        return (
+                            id.includes(busqueda) ||
+                            nombre.includes(busqueda) ||
+                            email.includes(busqueda)
+                        );
+
+                    }
+                );
+
+        }
+
+
+        // FILTRO ESTADO
+
+        if (estado) {
+
+            lista =
+                lista.filter(
+                    pedido =>
+                        pedido.estado === estado
+                );
+
+        }
+
+
+        // ORDENAR MÁS RECIENTE PRIMERO
+
+        lista.sort(
+            (a, b) =>
+                new Date(b.fecha) -
+                new Date(a.fecha)
+        );
+
+
+        if (!lista.length) {
+
+            tbody.innerHTML = `
+                <tr>
+
+                    <td colspan="6">
+
+                        <div class="stock-empty-state">
+
+                            <div>
+                                🛒
+                            </div>
+
+                            <strong>
+                                No hay pedidos
+                            </strong>
+
+                            <span>
+                                No encontramos pedidos con los filtros seleccionados.
+                            </span>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        tbody.innerHTML =
+            lista.map(
+                pedido => {
+
+                    const nombre =
+                        `${pedido.nombreCliente || ""}
+                        ${pedido.apellidoCliente || ""}`
+                            .trim();
+
+
+                    const estadoClase =
+                        obtenerClaseEstadoPedido(
+                            pedido.estado
+                        );
+
+
+                    return `
+                        <tr>
+
+                            <td>
+
+                                <strong>
+                                    #${pedido.id}
+                                </strong>
+
+                            </td>
+
+
+                            <td>
+
+                                <div class="order-client">
+
+                                    <strong>
+                                        ${escapeHtml(
+                                            nombre
+                                        )}
+                                    </strong>
+
+                                    <span>
+                                        ${escapeHtml(
+                                            pedido.emailCliente || ""
+                                        )}
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+
+                            <td>
+                                ${formatearFechaPedido(
+                                    pedido.fecha
+                                )}
+                            </td>
+
+
+                            <td>
+
+                                <strong>
+                                    ${formatearPrecio(
+                                        pedido.total
+                                    )}
+                                </strong>
+
+                            </td>
+
+
+                            <td>
+
+                                <span
+                                    class="order-status ${estadoClase}"
+                                >
+                                    ${escapeHtml(
+                                        formatearEstadoPedido(
+                                            pedido.estado
+                                        )
+                                    )}
+                                </span>
+
+                            </td>
+
+
+                            <td>
+
+                                <button
+                                    type="button"
+                                    class="icon-button"
+                                    title="Ver pedido"
+                                    onclick="verPedido(${pedido.id})"
+                                >
+                                    👁
+                                </button>
+
+                            </td>
+
+                        </tr>
+                    `;
+
+                }
+            ).join("");
+
+    }
+
+
+    // ==========================================
+    // ESTADÍSTICAS
+    // ==========================================
+
+    function actualizarEstadisticasPedidos() {
+
+        const total =
+            pedidos.length;
+
+
+        const pendientes =
+            pedidos.filter(
+                pedido =>
+                    pedido.estado ===
+                    "PENDIENTE"
+            ).length;
+
+
+        const confirmados =
+            pedidos.filter(
+                pedido =>
+                    pedido.estado ===
+                    "CONFIRMADO"
+            ).length;
+
+
+        const ventas =
+            pedidos
+                .filter(
+                    pedido =>
+                        pedido.estado !==
+                        "CANCELADO"
+                )
+                .reduce(
+                    (total, pedido) =>
+                        total +
+                        Number(
+                            pedido.total || 0
+                        ),
+                    0
+                );
+
+
+        const totalElement =
+            document.getElementById(
+                "ordersTotal"
+            );
+
+        const pendingElement =
+            document.getElementById(
+                "ordersPending"
+            );
+
+        const confirmedElement =
+            document.getElementById(
+                "ordersConfirmed"
+            );
+
+        const salesElement =
+            document.getElementById(
+                "ordersSales"
+            );
+
+
+        if (totalElement) {
+            totalElement.textContent =
+                total;
+        }
+
+
+        if (pendingElement) {
+            pendingElement.textContent =
+                pendientes;
+        }
+
+
+        if (confirmedElement) {
+            confirmedElement.textContent =
+                confirmados;
+        }
+
+
+        if (salesElement) {
+            salesElement.textContent =
+                formatearPrecio(
+                    ventas
+                );
+        }
+
+    }
+
+
+    // ==========================================
+    // VER PEDIDO
+    // ==========================================
+
+    window.verPedido =
+        async function(id) {
+
+            const modal =
+                document.getElementById(
+                    "orderModal"
+                );
+
+            const content =
+                document.getElementById(
+                    "orderModalContent"
+                );
+
+            const title =
+                document.getElementById(
+                    "orderModalTitle"
+                );
+
+
+            if (!modal || !content) {
+                return;
+            }
+
+
+            modal.classList.add("active");
+
+
+            content.innerHTML = `
+                <div class="loading">
+                    Cargando pedido...
+                </div>
+            `;
+
+
+            try {
+
+                const pedido =
+                    await apiFetch(
+                        `${CONFIG.ENDPOINTS.pedidos}/${id}`
+                    );
+
+
+                title.textContent =
+                    `Pedido #${pedido.id}`;
+
+
+                content.innerHTML =
+                    construirDetallePedido(
+                        pedido
+                    );
+
+
+            } catch (error) {
+
+                console.error(error);
+
+
+                content.innerHTML = `
+                    <div class="form-error active">
+                        ${escapeHtml(
+                            error.message ||
+                            "No se pudo cargar el pedido."
+                        )}
+                    </div>
+                `;
+
+            }
+
+        };
+
+
+    // ==========================================
+    // CONSTRUIR DETALLE
+    // ==========================================
+
+    function construirDetallePedido(
+        pedido
+    ) {
+
+        const nombre =
+            `${pedido.nombreCliente || ""}
+            ${pedido.apellidoCliente || ""}`
+                .trim();
+
+
+        const detalles =
+            pedido.detalles || [];
+
+
+        return `
+
+            <div class="order-detail">
+
+                <div class="order-detail-grid">
+
+                    <div>
+
+                        <span>
+                            Cliente
+                        </span>
+
+                        <strong>
+                            ${escapeHtml(
+                                nombre
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Fecha
+                        </span>
+
+                        <strong>
+                            ${formatearFechaPedido(
+                                pedido.fecha
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Email
+                        </span>
+
+                        <strong>
+                            ${escapeHtml(
+                                pedido.emailCliente
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Teléfono
+                        </span>
+
+                        <strong>
+                            ${escapeHtml(
+                                pedido.telefonoCliente
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="order-detail-full">
+
+                        <span>
+                            Dirección de entrega
+                        </span>
+
+                        <strong>
+                            ${escapeHtml(
+                                pedido.direccionEntrega
+                            )}
+                        </strong>
+
+                        <small>
+                            ${escapeHtml(
+                                pedido.localidadEntrega
+                            )}
+                            · CP
+                            ${escapeHtml(
+                                pedido.codigoPostalEntrega
+                            )}
+                        </small>
+
+                    </div>
+
+                </div>
+
+
+                <div class="order-status-editor">
+
+                    <label>
+                        Estado del pedido
+                    </label>
+
+                    <select
+                        id="orderDetailStatus"
+                        data-current-status="${escapeHtml(
+                            pedido.estado
+                        )}"
+                    >
+
+                        <option value="PENDIENTE">
+                            Pendiente
+                        </option>
+
+                        <option value="CONFIRMADO">
+                            Confirmado
+                        </option>
+
+                        <option value="PREPARANDO">
+                            Preparando
+                        </option>
+
+                        <option value="ENVIADO">
+                            Enviado
+                        </option>
+
+                        <option value="ENTREGADO">
+                            Entregado
+                        </option>
+
+                        <option value="CANCELADO">
+                            Cancelado
+                        </option>
+
+                    </select>
+
+
+                    <button
+                        type="button"
+                        class="primary-button"
+                        onclick="cambiarEstadoPedido(${pedido.id})"
+                    >
+                        Actualizar estado
+                    </button>
+
+                </div>
+
+
+                <div class="order-products">
+
+                    <h3>
+                        Productos
+                    </h3>
+
+
+                    ${detalles.map(
+                        detalle => {
+
+                            const producto =
+                                detalle.producto;
+
+
+                            const variante =
+                                detalle.variante;
+
+
+                            return `
+
+                                <div class="order-product">
+
+                                    <div class="order-product-main">
+
+                                        <strong>
+                                            ${escapeHtml(
+                                                producto?.nombre ||
+                                                "Producto"
+                                            )}
+                                        </strong>
+
+                                        <span>
+                                            Cantidad:
+                                            ${detalle.cantidad}
+                                        </span>
+
+                                    </div>
+
+
+                                    <div class="order-product-variant">
+
+                                        <span>
+                                            Talle:
+                                            <strong>
+                                                ${escapeHtml(
+                                                    variante?.talle?.nombre ||
+                                                    "-"
+                                                )}
+                                            </strong>
+                                        </span>
+
+
+                                        <span>
+
+                                            Color:
+
+                                            <span class="order-color">
+
+                                                <i
+                                                    style="
+                                                        background:${escapeHtml(
+                                                            variante?.color?.codigoHex ||
+                                                            "#ccc"
+                                                        )}
+                                                    "
+                                                ></i>
+
+                                                <strong>
+                                                    ${escapeHtml(
+                                                        variante?.color?.nombre ||
+                                                        "-"
+                                                    )}
+                                                </strong>
+
+                                            </span>
+
+                                        </span>
+
+                                    </div>
+
+
+                                    <div class="order-product-price">
+
+                                        <span>
+                                            ${formatearPrecio(
+                                                detalle.precioUnitario
+                                            )}
+                                        </span>
+
+                                        <strong>
+                                            ${formatearPrecio(
+                                                detalle.subtotal
+                                            )}
+                                        </strong>
+
+                                    </div>
+
+                                </div>
+
+                            `;
+
+                        }
+                    ).join("")}
+
+                </div>
+
+
+                <div class="order-totals">
+
+                    <div>
+
+                        <span>
+                            Subtotal
+                        </span>
+
+                        <strong>
+                            ${formatearPrecio(
+                                pedido.subtotal
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Envío
+                        </span>
+
+                        <strong>
+                            ${formatearPrecio(
+                                pedido.costoEnvio
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="order-total-final">
+
+                        <span>
+                            Total
+                        </span>
+
+                        <strong>
+                            ${formatearPrecio(
+                                pedido.total
+                            )}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        `;
+    }
+
+
+    // ==========================================
+    // CAMBIAR ESTADO
+    // ==========================================
+
+    window.cambiarEstadoPedido =
+        async function(id) {
+
+            const select =
+                document.getElementById(
+                    "orderDetailStatus"
+                );
+
+
+            if (!select) {
+                return;
+            }
+
+
+            const estado =
+                select.value;
+
+
+            try {
+
+                await apiFetch(
+                    `${CONFIG.ENDPOINTS.pedidos}/${id}/estado`,
+                    {
+                        method: "PUT",
+
+                        body: JSON.stringify({
+                            estado: estado
+                        })
+                    }
+                );
+
+
+                mostrarToast(
+                    "Estado actualizado correctamente."
+                );
+
+
+                await cargarPedidos();
+
+
+                await verPedido(id);
+
+
+            } catch (error) {
+
+                console.error(error);
+
+
+                mostrarToast(
+                    error.message ||
+                    "No se pudo actualizar el estado."
+                );
+
+            }
+
+        };
+
+
+    // ==========================================
+    // HELPERS PEDIDOS
+    // ==========================================
+
+    function obtenerClaseEstadoPedido(
+        estado
+    ) {
+
+        switch (estado) {
+
+            case "PENDIENTE":
+                return "order-status-pending";
+
+            case "CONFIRMADO":
+                return "order-status-confirmed";
+
+            case "PREPARANDO":
+                return "order-status-preparing";
+
+            case "ENVIADO":
+                return "order-status-shipped";
+
+            case "ENTREGADO":
+                return "order-status-delivered";
+
+            case "CANCELADO":
+                return "order-status-cancelled";
+
+            default:
+                return "";
+
+        }
+
+    }
+
+
+    function formatearEstadoPedido(
+        estado
+    ) {
+
+        const estados = {
+
+            PENDIENTE: "Pendiente",
+
+            CONFIRMADO: "Confirmado",
+
+            PREPARANDO: "Preparando",
+
+            ENVIADO: "Enviado",
+
+            ENTREGADO: "Entregado",
+
+            CANCELADO: "Cancelado"
+
+        };
+
+
+        return estados[estado] || estado;
+
+    }
+
+
+    function formatearFechaPedido(
+        fecha
+    ) {
+
+        if (!fecha) {
+            return "-";
+        }
+
+
+        const date =
+            new Date(fecha);
+
+
+        if (Number.isNaN(
+            date.getTime()
+        )) {
+
+            return fecha;
+
+        }
+
+
+        return new Intl.DateTimeFormat(
+            "es-AR",
+            {
+                dateStyle: "short",
+                timeStyle: "short"
+            }
+        ).format(date);
+
+    }
+
+
+    // ==========================================
+    // CERRAR MODAL PEDIDO
+    // ==========================================
+
+    document
+        .getElementById(
+            "closeOrderModal"
+        )
+        ?.addEventListener(
+            "click",
+            () => {
+
+                document
+                    .getElementById(
+                        "orderModal"
+                    )
+                    ?.classList.remove(
+                        "active"
+                    );
+
+            }
+        );
+
+
+    document
+        .getElementById(
+            "cancelOrderModal"
+        )
+        ?.addEventListener(
+            "click",
+            () => {
+
+                document
+                    .getElementById(
+                        "orderModal"
+                    )
+                    ?.classList.remove(
+                        "active"
+                    );
+
+            }
+        );
+
+
+    document
+        .getElementById(
+            "orderModal"
+        )
+        ?.addEventListener(
+            "click",
+            event => {
+
+                if (
+                    event.target.id ===
+                    "orderModal"
+                ) {
+
+                    event.target
+                        .classList.remove(
+                            "active"
+                        );
+
+                }
+
+            }
+        );
+
+
+    // ==========================================
+    // EVENTOS PEDIDOS
+    // ==========================================
+
+    document
+        .getElementById(
+            "orderSearch"
+        )
+        ?.addEventListener(
+            "input",
+            renderPedidos
+        );
+
+
+    document
+        .getElementById(
+            "orderStatusFilter"
+        )
+        ?.addEventListener(
+            "change",
+            renderPedidos
+        );
+
+
+    document
+        .getElementById(
+            "reloadOrders"
+        )
+        ?.addEventListener(
+            "click",
+            cargarPedidos
+        );
+
+
+
     // ==========================================
     // STOCK
     // ==========================================
@@ -2717,7 +3773,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document
         .getElementById("stockSearch")
-        .addEventListener(
+        ?.addEventListener(
             "input",
             event => {
 
@@ -2734,7 +3790,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .getElementById(
             "stockCategoryFilter"
         )
-        .addEventListener(
+        ?.addEventListener(
             "change",
             event => {
 
@@ -2768,7 +3824,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .getElementById(
             "stockColorFilter"
         )
-        .addEventListener(
+        ?.addEventListener(
             "change",
             event => {
 
@@ -2785,7 +3841,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .getElementById(
             "stockStatusFilter"
         )
-        .addEventListener(
+        ?.addEventListener(
             "change",
             event => {
 
@@ -2802,7 +3858,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .getElementById(
             "reloadStock"
         )
-        .addEventListener(
+        ?.addEventListener(
             "click",
             cargarStock
         );

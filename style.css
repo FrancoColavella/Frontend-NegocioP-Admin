@@ -2019,3 +2019,361 @@ td {
     }
 
 }
+
+/* ==========================================
+   PEDIDOS
+========================================== */
+
+.order-stats {
+    margin-bottom: 20px;
+}
+
+
+/* ==========================================
+   CLIENTE
+========================================== */
+
+.order-client {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.order-client strong {
+    font-size: 11px;
+}
+
+.order-client span {
+    color: var(--text-secondary);
+    font-size: 9px;
+}
+
+
+/* ==========================================
+   ESTADOS
+========================================== */
+
+.order-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.order-status-pending {
+    background: #fffbeb;
+    color: #b45309;
+}
+
+.order-status-confirmed {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.order-status-preparing {
+    background: #f5f3ff;
+    color: #6d28d9;
+}
+
+.order-status-shipped {
+    background: #ecfeff;
+    color: #0e7490;
+}
+
+.order-status-delivered {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.order-status-cancelled {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+
+/* ==========================================
+   MODAL PEDIDO
+========================================== */
+
+.order-modal {
+    max-width: 850px;
+}
+
+
+.order-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+
+/* ==========================================
+   DATOS CLIENTE
+========================================== */
+
+.order-detail-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(2, 1fr);
+    gap: 16px;
+
+    padding: 18px;
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    background: var(--surface-soft);
+}
+
+
+.order-detail-grid > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+
+.order-detail-grid span {
+    color: var(--text-secondary);
+    font-size: 10px;
+}
+
+
+.order-detail-grid strong {
+    font-size: 12px;
+}
+
+
+.order-detail-full {
+    grid-column: 1 / -1;
+}
+
+
+.order-detail-full small {
+    color: var(--text-secondary);
+    font-size: 10px;
+}
+
+
+/* ==========================================
+   CAMBIO DE ESTADO
+========================================== */
+
+.order-status-editor {
+    display: flex;
+    align-items: end;
+    gap: 12px;
+
+    padding: 16px;
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+
+.order-status-editor label {
+    display: block;
+    margin-bottom: 6px;
+
+    color: var(--text-secondary);
+    font-size: 10px;
+}
+
+
+.order-status-editor select {
+    min-width: 180px;
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    padding: 10px;
+
+    background: white;
+
+    font-size: 11px;
+}
+
+
+/* ==========================================
+   PRODUCTOS DEL PEDIDO
+========================================== */
+
+.order-products {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+
+.order-products h3 {
+    margin: 0 0 4px;
+
+    font-size: 14px;
+}
+
+
+.order-product {
+    display: grid;
+
+    grid-template-columns:
+        1.5fr
+        1.2fr
+        120px;
+
+    align-items: center;
+
+    gap: 15px;
+
+    padding: 14px;
+
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    background: white;
+}
+
+
+.order-product-main {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+
+.order-product-main strong {
+    font-size: 12px;
+}
+
+
+.order-product-main span {
+    color: var(--text-secondary);
+    font-size: 10px;
+}
+
+
+.order-product-variant {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    font-size: 10px;
+}
+
+
+.order-color {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+
+.order-color i {
+    display: inline-block;
+
+    width: 14px;
+    height: 14px;
+
+    border-radius: 50%;
+
+    border: 1px solid rgba(0,0,0,.12);
+}
+
+
+.order-product-price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+
+.order-product-price span {
+    color: var(--text-secondary);
+    font-size: 9px;
+}
+
+
+.order-product-price strong {
+    font-size: 12px;
+}
+
+
+/* ==========================================
+   TOTALES
+========================================== */
+
+.order-totals {
+    margin-left: auto;
+
+    width: 280px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+
+.order-totals > div {
+    display: flex;
+    justify-content: space-between;
+
+    color: var(--text-secondary);
+
+    font-size: 11px;
+}
+
+
+.order-total-final {
+    padding-top: 12px;
+
+    border-top: 1px solid var(--border);
+
+    color: var(--text) !important;
+}
+
+
+.order-total-final strong {
+    font-size: 17px;
+}
+
+
+/* ==========================================
+   RESPONSIVE PEDIDOS
+========================================== */
+
+@media (max-width: 800px) {
+
+    .order-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .order-detail-full {
+        grid-column: auto;
+    }
+
+    .order-status-editor {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .order-status-editor select {
+        width: 100%;
+    }
+
+    .order-product {
+        grid-template-columns: 1fr;
+    }
+
+    .order-product-price {
+        align-items: flex-start;
+    }
+
+    .order-totals {
+        width: 100%;
+    }
+
+}
+
