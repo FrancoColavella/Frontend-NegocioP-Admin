@@ -1456,3 +1456,210 @@ td {
         max-height: 95vh;
     }
 }
+
+/* ==========================================
+   VARIANTES DEL PRODUCTO
+========================================== */
+
+.variants-section {
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.variants-header {
+    margin-bottom: 18px;
+}
+
+.variants-header h3 {
+    margin: 4px 0 6px;
+    font-size: 18px;
+    color: #111827;
+}
+
+.variants-header p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.variants-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.variant-row {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr 100px 110px;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fafafa;
+}
+
+.variant-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.variant-label {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.variant-value {
+    font-weight: 600;
+    color: #111827;
+}
+
+.variant-color {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.variant-color-preview {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid #d1d5db;
+    flex-shrink: 0;
+}
+
+.variant-stock-input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+}
+
+.variant-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.variant-save-button,
+.variant-delete-button {
+    border: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    transition: 0.2s;
+}
+
+.variant-save-button {
+    background: #eef2ff;
+    color: #4f46e5;
+}
+
+.variant-save-button:hover {
+    background: #e0e7ff;
+}
+
+.variant-delete-button {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.variant-delete-button:hover {
+    background: #fee2e2;
+}
+
+.add-variant-box {
+    margin-top: 18px;
+    padding: 16px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    background: #f8fafc;
+}
+
+.add-variant-header {
+    margin-bottom: 14px;
+    color: #111827;
+    font-size: 14px;
+}
+
+.variant-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr 100px auto;
+    gap: 12px;
+    align-items: end;
+}
+
+.variant-form-action {
+    display: flex;
+}
+
+.variant-form-action .secondary-button {
+    width: 100%;
+    white-space: nowrap;
+}
+
+.variant-form .form-group {
+    margin: 0;
+}
+
+.variant-form-error {
+    margin-top: 10px;
+}
+
+#variantFormError {
+    display: none;
+    margin-top: 10px;
+}
+
+#variantFormError.active {
+    display: block;
+}
+
+.variants-empty {
+    padding: 20px;
+    text-align: center;
+    color: #6b7280;
+    border: 1px dashed #d1d5db;
+    border-radius: 10px;
+    font-size: 13px;
+}
+
+
+/* ==========================================
+   RESPONSIVE VARIANTES
+========================================== */
+
+@media (max-width: 800px) {
+
+    .variant-row {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .variant-actions {
+        justify-content: flex-start;
+    }
+
+    .variant-form {
+        grid-template-columns: 1fr 1fr;
+    }
+
+}
+
+
+@media (max-width: 520px) {
+
+    .variant-row {
+        grid-template-columns: 1fr;
+    }
+
+    .variant-form {
+        grid-template-columns: 1fr;
+    }
+
+}

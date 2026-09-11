@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let categorias = [];
     let talles = [];
     let colores = [];
+    let variantes = [];
 
     let productoEditando = null;
 
@@ -953,6 +954,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 producto.categoria?.id
             );
 
+            cargarTallesVariantSelect();
+            cargarColoresVariantSelect();
+
+            cargarVariantesProducto(
+                producto.id
+            );
+
         } else {
 
             document.getElementById(
@@ -976,6 +984,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
             cargarCategoriasSelect();
 
+            cargarTallesVariantSelect();
+            cargarColoresVariantSelect();
+
+            document.getElementById(
+                "variantsList"
+            ).innerHTML = `
+                <div class="variants-empty">
+                    Guardá primero el producto para poder agregar variantes.
+                </div>
+            `;
+
         }
 
 
@@ -991,6 +1010,604 @@ document.addEventListener("DOMContentLoaded", () => {
         productoEditando = null;
 
     }
+
+    // ==========================================
+    // VARIANTES
+    // ==========================================
+
+    async function cargarVariantes() {
+
+        try {
+
+            variantes = await apiFetch(
+                CONFIG.ENDPOINTS.variantes
+            );
+
+            return variantes;
+
+        } catch (error) {
+
+            console.error(
+                "Error cargando variantes:",
+                error
+            );
+
+            throw error;
+        }
+    }
+
+
+    function cargarTallesVariantSelect() {
+
+        const select =
+            document.getElementById("variantTalle");
+
+        if (!select) {
+            return;
+        }
+
+        const tallesActivos =
+            talles.filter(
+                talle => talle.activo
+            );
+
+        select.innerHTML = `
+            <option value="">
+                Seleccionar talle
+            </option>
+
+            ${tallesActivos.map(talle => `
+                <option value="${talle.id}">
+                    ${escapeHtml(talle.nombre)}
+                </option>
+            `).join("")}
+        `;
+    }
+
+
+    function cargarColoresVariantSelect() {
+
+        const select =
+            document.getElementById("variantColor");
+
+        if (!select) {
+            return;
+        }
+
+        const coloresActivos =
+            colores.filter(
+                color => color.activo
+            );
+
+        select.innerHTML = `
+            <option value="">
+                Seleccionar color
+            </option>
+
+            ${coloresActivos.map(color => `
+                <option value="${color.id}">
+                    ${escapeHtml(color.nombre)}
+                </option>
+            `).join("")}
+        `;
+    }
+
+
+    async function cargarVariantesProducto(
+        productoId
+    ) {
+
+        const container =
+            document.getElementById("variantsList");
+
+        if (!container) {
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="loading">
+                Cargando variantes...
+            </div>
+        `;
+
+        try {
+
+            const todas =
+                await apiFetch(
+                    CONFIG.ENDPOINTS.variantes
+                );
+
+            variantes = todas;
+
+            const delProducto =
+                todas.filter(
+                    variante =>
+                        Number(variante.producto?.id) ===
+                        Number(productoId)
+                );
+
+            renderVariantesProducto(
+                delProducto
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            container.innerHTML = `
+                <div class="variants-empty">
+                    No se pudieron cargar las variantes.
+                </div>
+            `;
+        }
+    }
+
+
+    function renderVariantesProducto(
+        lista
+    ) {
+
+        const container =
+            document.getElementById(
+                "variantsList"
+            );
+
+        if (!container) {
+            return;
+        }
+
+        if (!lista.length) {
+
+            container.innerHTML = `
+                <div class="variants-empty">
+                    Este producto todavía no tiene variantes.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        container.innerHTML =
+            lista.map(variante => {
+
+                const talle =
+                    variante.talle?.nombre ||
+                    "Sin talle";
+
+                const color =
+                    variante.color?.nombre ||
+                    "Sin color";
+
+                const codigo =
+                    variante.color?.codigoHex ||
+                    "#cccccc";
+
+                const stock =
+                    Number(variante.stock) || 0;
+
+
+                return `
+                    <div
+                        class="variant-row"
+                        data-variant-id="${variante.id}"
+                    >
+
+                        <div class="variant-info">
+
+                            <span class="variant-label">
+                                Talle
+                            </span>
+
+                            <span class="variant-value">
+                                ${escapeHtml(talle)}
+                            </span>
+
+                        </div>
+
+
+                        <div class="variant-color">
+
+                            <span
+                                class="variant-color-preview"
+                                style="background-color: ${escapeHtml(codigo)}"
+                            ></span>
+
+                            <span class="variant-value">
+                                ${escapeHtml(color)}
+                            </span>
+
+                        </div>
+
+
+                        <input
+                            type="number"
+                            class="variant-stock-input"
+                            min="0"
+                            step="1"
+                            value="${stock}"
+                            data-stock-input="${variante.id}"
+                        >
+
+
+                        <div class="variant-actions">
+
+                            <button
+                                type="button"
+                                class="variant-save-button"
+                                onclick="guardarStockVariante(${variante.id})"
+                                title="Guardar stock"
+                            >
+                                ✓
+                            </button>
+
+                            <button
+                                type="button"
+                                class="variant-delete-button"
+                                onclick="eliminarVariante(${variante.id})"
+                                title="Eliminar variante"
+                            >
+                                🗑
+                            </button>
+
+                        </div>
+
+                    </div>
+                `;
+
+            }).join("");
+    }
+
+    window.guardarStockVariante =
+    async function(id) {
+
+        const input =
+            document.querySelector(
+                `[data-stock-input="${id}"]`
+            );
+
+        if (!input) {
+            return;
+        }
+
+        const stock =
+            Number(input.value);
+
+
+        if (
+            !Number.isInteger(stock) ||
+            stock < 0
+        ) {
+
+            mostrarToast(
+                "El stock debe ser un número entero mayor o igual a 0."
+            );
+
+            return;
+        }
+
+
+        const variante =
+            variantes.find(
+                item =>
+                    Number(item.id) ===
+                    Number(id)
+            );
+
+
+        if (!variante) {
+
+            mostrarToast(
+                "No se encontró la variante."
+            );
+
+            return;
+        }
+
+
+        try {
+
+            await apiFetch(
+                `${CONFIG.ENDPOINTS.variantes}/${id}`,
+                {
+                    method: "PUT",
+
+                    body: JSON.stringify({
+                        producto: {
+                            id: variante.producto.id
+                        },
+
+                        talle: {
+                            id: variante.talle.id
+                        },
+
+                        color: {
+                            id: variante.color.id
+                        },
+
+                        stock: stock
+                    })
+                }
+            );
+
+
+            mostrarToast(
+                "Stock actualizado correctamente."
+            );
+
+
+            if (productoEditando) {
+
+                await cargarVariantesProducto(
+                    productoEditando.id
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(error);
+
+            mostrarToast(
+                error.message ||
+                "No se pudo actualizar el stock."
+            );
+        }
+    };
+
+    document
+    .getElementById("addVariantButton")
+    .addEventListener(
+        "click",
+        async () => {
+
+            const talleId =
+                Number(
+                    document.getElementById(
+                        "variantTalle"
+                    ).value
+                );
+
+            const colorId =
+                Number(
+                    document.getElementById(
+                        "variantColor"
+                    ).value
+                );
+
+            const stock =
+                Number(
+                    document.getElementById(
+                        "variantStock"
+                    ).value
+                );
+
+            const errorElement =
+                document.getElementById(
+                    "variantFormError"
+                );
+
+
+            errorElement.classList.remove(
+                "active"
+            );
+
+
+            if (!productoEditando) {
+
+                errorElement.textContent =
+                    "Primero guardá el producto.";
+
+                errorElement.classList.add(
+                    "active"
+                );
+
+                return;
+            }
+
+
+            if (!talleId) {
+
+                errorElement.textContent =
+                    "Seleccioná un talle.";
+
+                errorElement.classList.add(
+                    "active"
+                );
+
+                return;
+            }
+
+
+            if (!colorId) {
+
+                errorElement.textContent =
+                    "Seleccioná un color.";
+
+                errorElement.classList.add(
+                    "active"
+                );
+
+                return;
+            }
+
+
+            if (
+                !Number.isInteger(stock) ||
+                stock < 0
+            ) {
+
+                errorElement.textContent =
+                    "El stock debe ser un número entero mayor o igual a 0.";
+
+                errorElement.classList.add(
+                    "active"
+                );
+
+                return;
+            }
+
+
+            const yaExiste =
+                variantes.some(
+                    variante =>
+                        Number(variante.producto?.id) ===
+                            Number(productoEditando.id) &&
+                        Number(variante.talle?.id) ===
+                            Number(talleId) &&
+                        Number(variante.color?.id) ===
+                            Number(colorId)
+                );
+
+
+            if (yaExiste) {
+
+                errorElement.textContent =
+                    "Esa combinación de talle y color ya existe.";
+
+                errorElement.classList.add(
+                    "active"
+                );
+
+                return;
+            }
+
+
+            const button =
+                document.getElementById(
+                    "addVariantButton"
+                );
+
+            const textoOriginal =
+                button.textContent;
+
+            button.disabled = true;
+            button.textContent =
+                "Agregando...";
+
+
+            try {
+
+                await apiFetch(
+                    CONFIG.ENDPOINTS.variantes,
+                    {
+                        method: "POST",
+
+                        body: JSON.stringify({
+
+                            producto: {
+                                id:
+                                    productoEditando.id
+                            },
+
+                            talle: {
+                                id: talleId
+                            },
+
+                            color: {
+                                id: colorId
+                            },
+
+                            stock: stock
+
+                        })
+                    }
+                );
+
+
+                mostrarToast(
+                    "Variante agregada correctamente."
+                );
+
+
+                document.getElementById(
+                    "variantTalle"
+                ).value = "";
+
+
+                document.getElementById(
+                    "variantColor"
+                ).value = "";
+
+
+                document.getElementById(
+                    "variantStock"
+                ).value = 0;
+
+
+                await cargarVariantesProducto(
+                    productoEditando.id
+                );
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                errorElement.textContent =
+                    error.message ||
+                    "No se pudo crear la variante.";
+
+                errorElement.classList.add(
+                    "active"
+                );
+
+            } finally {
+
+                button.disabled = false;
+                button.textContent =
+                    textoOriginal;
+            }
+
+        }
+    );
+
+    window.eliminarVariante =
+    async function(id) {
+
+        const confirmar =
+            confirm(
+                "¿Querés eliminar esta variante?"
+            );
+
+        if (!confirmar) {
+            return;
+        }
+
+
+        try {
+
+            await apiFetch(
+                `${CONFIG.ENDPOINTS.variantes}/${id}`,
+                {
+                    method: "DELETE"
+                }
+            );
+
+
+            mostrarToast(
+                "Variante eliminada correctamente."
+            );
+
+
+            if (productoEditando) {
+
+                await cargarVariantesProducto(
+                    productoEditando.id
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(error);
+
+            mostrarToast(
+                error.message ||
+                "No se pudo eliminar la variante."
+            );
+        }
+    };
 
 
     document
