@@ -663,6 +663,10 @@
              STOCK
         ================================== -->
 
+        <!-- ==================================
+            STOCK
+        ================================== -->
+
         <section
             class="page-section"
             id="section-stock"
@@ -684,23 +688,242 @@
                     </p>
                 </div>
 
+                <button
+                    class="secondary-button"
+                    id="reloadStock"
+                >
+                    ↻ Actualizar
+                </button>
+
             </div>
 
 
-            <div class="empty-state">
+            <!-- ================================
+                RESUMEN
+            ================================= -->
 
-                <div class="empty-icon">
-                    📦
+            <div class="stock-stats">
+
+                <div class="stock-stat-card">
+
+                    <div class="stock-stat-icon">
+                        📦
+                    </div>
+
+                    <div>
+                        <span>
+                            Variantes
+                        </span>
+
+                        <strong id="stockTotalVariantes">
+                            -
+                        </strong>
+                    </div>
+
                 </div>
 
-                <h3>
-                    Gestión de stock
-                </h3>
 
-                <p>
-                    En esta sección vamos a mostrar cada producto,
-                    talle, color y cantidad disponible.
-                </p>
+                <div class="stock-stat-card">
+
+                    <div class="stock-stat-icon stock-ok">
+                        ✓
+                    </div>
+
+                    <div>
+                        <span>
+                            En stock
+                        </span>
+
+                        <strong id="stockEnStock">
+                            -
+                        </strong>
+                    </div>
+
+                </div>
+
+
+                <div class="stock-stat-card">
+
+                    <div class="stock-stat-icon stock-low">
+                        !
+                    </div>
+
+                    <div>
+                        <span>
+                            Stock bajo
+                        </span>
+
+                        <strong id="stockBajo">
+                            -
+                        </strong>
+                    </div>
+
+                </div>
+
+
+                <div class="stock-stat-card">
+
+                    <div class="stock-stat-icon stock-empty">
+                        0
+                    </div>
+
+                    <div>
+                        <span>
+                            Sin stock
+                        </span>
+
+                        <strong id="stockSinStock">
+                            -
+                        </strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================
+                FILTROS
+            ================================= -->
+
+            <div class="table-card stock-card">
+
+                <div class="stock-filters">
+
+                    <div class="search-box">
+
+                        <span>
+                            ⌕
+                        </span>
+
+                        <input
+                            type="text"
+                            id="stockSearch"
+                            placeholder="Buscar producto..."
+                        >
+
+                    </div>
+
+
+                    <select
+                        id="stockCategoryFilter"
+                        class="stock-filter"
+                    >
+                        <option value="">
+                            Todas las categorías
+                        </option>
+                    </select>
+
+
+                    <select
+                        id="stockSizeFilter"
+                        class="stock-filter"
+                    >
+                        <option value="">
+                            Todos los talles
+                        </option>
+                    </select>
+
+
+                    <select
+                        id="stockColorFilter"
+                        class="stock-filter"
+                    >
+                        <option value="">
+                            Todos los colores
+                        </option>
+                    </select>
+
+
+                    <select
+                        id="stockStatusFilter"
+                        class="stock-filter"
+                    >
+                        <option value="">
+                            Todos los estados
+                        </option>
+
+                        <option value="ok">
+                            En stock
+                        </option>
+
+                        <option value="low">
+                            Stock bajo
+                        </option>
+
+                        <option value="empty">
+                            Sin stock
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- ================================
+                    TABLA
+                ================================= -->
+
+                <div class="table-container">
+
+                    <table class="stock-table">
+
+                        <thead>
+
+                        <tr>
+
+                            <th>
+                                Producto
+                            </th>
+
+                            <th>
+                                Categoría
+                            </th>
+
+                            <th>
+                                Talle
+                            </th>
+
+                            <th>
+                                Color
+                            </th>
+
+                            <th>
+                                Stock
+                            </th>
+
+                            <th>
+                                Estado
+                            </th>
+
+                            <th>
+                                Acción
+                            </th>
+
+                        </tr>
+
+                        </thead>
+
+
+                        <tbody id="stockTableBody">
+
+                        <tr>
+
+                            <td colspan="7">
+
+                                <div class="loading">
+                                    Cargando stock...
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
 
             </div>
 

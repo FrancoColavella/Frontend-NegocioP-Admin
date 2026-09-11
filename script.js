@@ -119,6 +119,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (sectionName === "colores") {
             renderColores();
         }
+
+        if (sectionName === "stock") {
+            cargarStock();
+        }
     }
 
 
@@ -1931,6 +1935,877 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
             }
         };
+
+    // ==========================================
+    // STOCK
+    // ==========================================
+
+    let stockVariantes = [];
+
+    let filtrosStock = {
+        busqueda: "",
+        categoria: "",
+        talle: "",
+        color: "",
+        estado: ""
+    };
+
+
+    // ==========================================
+    // CARGAR STOCK
+    // ==========================================
+
+    async function cargarStock() {
+
+        const tbody =
+            document.getElementById(
+                "stockTableBody"
+            );
+
+        if (!tbody) {
+            return;
+        }
+
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7">
+                    <div class="loading">
+                        Cargando stock...
+                    </div>
+                </td>
+            </tr>
+        `;
+
+
+        try {
+
+            stockVariantes =
+                await apiFetch(
+                    CONFIG.ENDPOINTS.variantes
+                );
+
+
+            actualizarFiltrosStock();
+
+            renderStock();
+
+        } catch (error) {
+
+            console.error(
+                "Error cargando stock:",
+                error
+            );
+
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7">
+                        <div class="loading">
+                            No se pudo cargar el stock.
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+        }
+
+    }
+
+
+    // ==========================================
+    // FILTROS
+    // ==========================================
+
+    function actualizarFiltrosStock() {
+
+        const categorySelect =
+            document.getElementById(
+                "stockCategoryFilter"
+            );
+
+        const sizeSelect =
+            document.getElementById(
+                "stockSizeFilter"
+            );
+
+        const colorSelect =
+            document.getElementById(
+                "stockColorFilter"
+            );
+
+
+        if (!categorySelect ||
+            !sizeSelect ||
+            !colorSelect) {
+
+            return;
+        }
+
+
+        const categoriasStock =
+            [
+                ...new Map(
+                    stockVariantes
+                        .filter(v => v.producto?.categoria)
+                        .map(v => [
+                            v.producto.categoria.id,
+                            v.producto.categoria
+                        ])
+                ).values()
+            ];
+
+
+        const tallesStock =
+            [
+                ...new Map(
+                    stockVariantes
+                        .filter(v => v.talle)
+                        .map(v => [
+                            v.talle.id,
+                            v.talle
+                        ])
+                ).values()
+            ];
+
+
+        const coloresStock =
+            [
+                ...new Map(
+                    stockVariantes
+                        .filter(v => v.color)
+                        .map(v => [
+                            v.color.id,
+                            v.color
+                        ])
+                ).values()
+            ];
+
+
+        categorySelect.innerHTML = `
+            <option value="">
+                Todas las categorías
+            </option>
+
+            ${categoriasStock.map(categoria => `
+                <option value="${categoria.id}">
+                    ${escapeHtml(categoria.nombre)}
+                </option>
+            `).join("")}
+        `;
+
+
+        sizeSelect.innerHTML = `
+            <option value="">
+                Todos los talles
+            </option>
+
+            ${tallesStock.map(talle => `
+                <option value="${talle.id}">
+                    ${escapeHtml(talle.nombre)}
+                </option>
+            `).join("")}
+        `;
+
+
+        colorSelect.innerHTML = `
+            <option value="">
+                Todos los colores
+            </option>
+
+            ${coloresStock.map(color => `
+                <option value="${color.id}">
+                    ${escapeHtml(color.nombre)}
+                </option>
+            `).join("")}
+        `;
+
+    }
+
+
+    // ==========================================
+    // ESTADO DEL STOCK
+    // ==========================================
+
+    function obtenerEstadoStock(stock) {
+
+        stock = Number(stock);
+
+
+        if (stock <= 0) {
+
+            return {
+                clase: "stock-status-empty",
+                texto: "Sin stock"
+            };
+
+        }
+
+
+        if (stock <= 5) {
+
+            return {
+                clase: "stock-status-low",
+                texto: "Stock bajo"
+            };
+
+        }
+
+
+        return {
+            clase: "stock-status-ok",
+            texto: "En stock"
+        };
+
+    }
+
+
+    // ==========================================
+    // RENDER STOCK
+    // ==========================================
+
+    function renderStock() {
+
+        const tbody =
+            document.getElementById(
+                "stockTableBody"
+            );
+
+
+        if (!tbody) {
+            return;
+        }
+
+
+        let lista =
+            [...stockVariantes];
+
+
+        // ================================
+        // BÚSQUEDA
+        // ================================
+
+        if (filtrosStock.busqueda) {
+
+            const texto =
+                filtrosStock.busqueda
+                    .toLowerCase()
+                    .trim();
+
+
+            lista =
+                lista.filter(variante => {
+
+                    const producto =
+                        variante.producto?.nombre
+                            ?.toLowerCase() || "";
+
+
+                    const categoria =
+                        variante.producto
+                            ?.categoria
+                            ?.nombre
+                            ?.toLowerCase() || "";
+
+
+                    const talle =
+                        variante.talle
+                            ?.nombre
+                            ?.toLowerCase() || "";
+
+
+                    const color =
+                        variante.color
+                            ?.nombre
+                            ?.toLowerCase() || "";
+
+
+                    return (
+                        producto.includes(texto) ||
+                        categoria.includes(texto) ||
+                        talle.includes(texto) ||
+                        color.includes(texto)
+                    );
+
+                });
+
+        }
+
+
+        // ================================
+        // CATEGORÍA
+        // ================================
+
+        if (filtrosStock.categoria) {
+
+            lista =
+                lista.filter(
+                    variante =>
+                        String(
+                            variante.producto
+                                ?.categoria
+                                ?.id
+                        ) ===
+                        String(
+                            filtrosStock.categoria
+                        )
+                );
+
+        }
+
+
+        // ================================
+        // TALLE
+        // ================================
+
+        if (filtrosStock.talle) {
+
+            lista =
+                lista.filter(
+                    variante =>
+                        String(
+                            variante.talle?.id
+                        ) ===
+                        String(
+                            filtrosStock.talle
+                        )
+                );
+
+        }
+
+
+        // ================================
+        // COLOR
+        // ================================
+
+        if (filtrosStock.color) {
+
+            lista =
+                lista.filter(
+                    variante =>
+                        String(
+                            variante.color?.id
+                        ) ===
+                        String(
+                            filtrosStock.color
+                        )
+                );
+
+        }
+
+
+        // ================================
+        // ESTADO
+        // ================================
+
+        if (filtrosStock.estado) {
+
+            lista =
+                lista.filter(variante => {
+
+                    const stock =
+                        Number(
+                            variante.stock
+                        );
+
+
+                    if (
+                        filtrosStock.estado ===
+                        "empty"
+                    ) {
+
+                        return stock <= 0;
+
+                    }
+
+
+                    if (
+                        filtrosStock.estado ===
+                        "low"
+                    ) {
+
+                        return (
+                            stock > 0 &&
+                            stock <= 5
+                        );
+
+                    }
+
+
+                    if (
+                        filtrosStock.estado ===
+                        "ok"
+                    ) {
+
+                        return stock > 5;
+
+                    }
+
+
+                    return true;
+
+                });
+
+        }
+
+
+        actualizarEstadisticasStock();
+
+
+        if (!lista.length) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7">
+
+                        <div class="stock-empty-state">
+
+                            <div>
+                                📦
+                            </div>
+
+                            <strong>
+                                No hay variantes
+                            </strong>
+
+                            <span>
+                                No encontramos stock con los filtros seleccionados.
+                            </span>
+
+                        </div>
+
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        tbody.innerHTML =
+            lista.map(variante => {
+
+                const producto =
+                    variante.producto?.nombre ||
+                    "Sin producto";
+
+
+                const categoria =
+                    variante.producto
+                        ?.categoria
+                        ?.nombre ||
+                    "Sin categoría";
+
+
+                const talle =
+                    variante.talle?.nombre ||
+                    "-";
+
+
+                const color =
+                    variante.color?.nombre ||
+                    "-";
+
+
+                const codigoHex =
+                    variante.color
+                        ?.codigoHex ||
+                    "#cccccc";
+
+
+                const stock =
+                    Number(
+                        variante.stock
+                    );
+
+
+                const estado =
+                    obtenerEstadoStock(
+                        stock
+                    );
+
+
+                return `
+
+                    <tr>
+
+                        <td>
+
+                            <div class="stock-product">
+
+                                <strong>
+                                    ${escapeHtml(
+                                        producto
+                                    )}
+                                </strong>
+
+                            </div>
+
+                        </td>
+
+
+                        <td>
+                            ${escapeHtml(
+                                categoria
+                            )}
+                        </td>
+
+
+                        <td>
+
+                            <span class="stock-size">
+                                ${escapeHtml(
+                                    talle
+                                )}
+                            </span>
+
+                        </td>
+
+
+                        <td>
+
+                            <div class="stock-color">
+
+                                <span
+                                    class="stock-color-dot"
+                                    style="
+                                        background:${escapeHtml(
+                                            codigoHex
+                                        )}
+                                    "
+                                ></span>
+
+                                ${escapeHtml(
+                                    color
+                                )}
+
+                            </div>
+
+                        </td>
+
+
+                        <td>
+
+                            <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                class="stock-table-input"
+                                value="${stock}"
+                                data-stock-table-input="${variante.id}"
+                            >
+
+                        </td>
+
+
+                        <td>
+
+                            <span
+                                class="stock-status ${estado.clase}"
+                            >
+                                ${estado.texto}
+                            </span>
+
+                        </td>
+
+
+                        <td>
+
+                            <button
+                                type="button"
+                                class="icon-button"
+                                title="Guardar stock"
+                                onclick="guardarStockDesdeTabla(${variante.id})"
+                            >
+                                ✓
+                            </button>
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+            }).join("");
+
+    }
+
+
+    // ==========================================
+    // ESTADÍSTICAS
+    // ==========================================
+
+    function actualizarEstadisticasStock() {
+
+        const total =
+            stockVariantes.length;
+
+
+        const enStock =
+            stockVariantes.filter(
+                variante =>
+                    Number(
+                        variante.stock
+                    ) > 5
+            ).length;
+
+
+        const bajo =
+            stockVariantes.filter(
+                variante => {
+
+                    const stock =
+                        Number(
+                            variante.stock
+                        );
+
+                    return (
+                        stock > 0 &&
+                        stock <= 5
+                    );
+
+                }
+            ).length;
+
+
+        const sinStock =
+            stockVariantes.filter(
+                variante =>
+                    Number(
+                        variante.stock
+                    ) <= 0
+            ).length;
+
+
+        document.getElementById(
+            "stockTotalVariantes"
+        ).textContent = total;
+
+
+        document.getElementById(
+            "stockEnStock"
+        ).textContent = enStock;
+
+
+        document.getElementById(
+            "stockBajo"
+        ).textContent = bajo;
+
+
+        document.getElementById(
+            "stockSinStock"
+        ).textContent = sinStock;
+
+    }
+
+
+    // ==========================================
+    // GUARDAR STOCK DESDE TABLA
+    // ==========================================
+
+    window.guardarStockDesdeTabla =
+        async function(id) {
+
+            const input =
+                document.querySelector(
+                    `[data-stock-table-input="${id}"]`
+                );
+
+
+            if (!input) {
+                return;
+            }
+
+
+            const stock =
+                Number(
+                    input.value
+                );
+
+
+            if (
+                !Number.isInteger(stock) ||
+                stock < 0
+            ) {
+
+                mostrarToast(
+                    "El stock debe ser un número entero mayor o igual a 0."
+                );
+
+                return;
+
+            }
+
+
+            const variante =
+                stockVariantes.find(
+                    item =>
+                        Number(item.id) ===
+                        Number(id)
+                );
+
+
+            if (!variante) {
+
+                mostrarToast(
+                    "No se encontró la variante."
+                );
+
+                return;
+
+            }
+
+
+            try {
+
+                await apiFetch(
+                    `${CONFIG.ENDPOINTS.variantes}/${id}`,
+                    {
+                        method: "PUT",
+
+                        body: JSON.stringify({
+
+                            producto: {
+                                id:
+                                    variante.producto.id
+                            },
+
+                            talle: {
+                                id:
+                                    variante.talle.id
+                            },
+
+                            color: {
+                                id:
+                                    variante.color.id
+                            },
+
+                            stock: stock
+
+                        })
+                    }
+                );
+
+
+                mostrarToast(
+                    "Stock actualizado correctamente."
+                );
+
+
+                await cargarStock();
+
+            } catch (error) {
+
+                console.error(
+                    error
+                );
+
+
+                mostrarToast(
+                    error.message ||
+                    "No se pudo actualizar el stock."
+                );
+
+            }
+
+        };
+
+
+    // ==========================================
+    // EVENTOS FILTROS STOCK
+    // ==========================================
+
+    document
+        .getElementById("stockSearch")
+        .addEventListener(
+            "input",
+            event => {
+
+                filtrosStock.busqueda =
+                    event.target.value;
+
+                renderStock();
+
+            }
+        );
+
+
+    document
+        .getElementById(
+            "stockCategoryFilter"
+        )
+        .addEventListener(
+            "change",
+            event => {
+
+                filtrosStock.categoria =
+                    event.target.value;
+
+                renderStock();
+
+            }
+        );
+
+
+    document
+        .getElementById(
+            "stockSizeFilter"
+        )
+        .addEventListener(
+            "change",
+            event => {
+
+                filtrosStock.talle =
+                    event.target.value;
+
+                renderStock();
+
+            }
+        );
+
+
+    document
+        .getElementById(
+            "stockColorFilter"
+        )
+        .addEventListener(
+            "change",
+            event => {
+
+                filtrosStock.color =
+                    event.target.value;
+
+                renderStock();
+
+            }
+        );
+
+
+    document
+        .getElementById(
+            "stockStatusFilter"
+        )
+        .addEventListener(
+            "change",
+            event => {
+
+                filtrosStock.estado =
+                    event.target.value;
+
+                renderStock();
+
+            }
+        );
+
+
+    document
+        .getElementById(
+            "reloadStock"
+        )
+        .addEventListener(
+            "click",
+            cargarStock
+        );
 
 
     // ==========================================
