@@ -74,7 +74,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         pedidos: "Pedidos",
 
-        stock: "Stock"
+        stock: "Stock",
+
+        movimientos: "Movimientos de stock"
 
     };
 
@@ -130,6 +132,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (sectionName === "pedidos") {
             cargarPedidos();
+        }
+
+        if (sectionName === "movimientos") {
+            cargarMovimientos();
         }
     }
 
@@ -3667,31 +3673,23 @@ document.addEventListener("DOMContentLoaded", () => {
                     `[data-stock-table-input="${id}"]`
                 );
 
-
             if (!input) {
                 return;
             }
 
-
             const stock =
-                Number(
-                    input.value
-                );
-
+                Number(input.value);
 
             if (
                 !Number.isInteger(stock) ||
                 stock < 0
             ) {
-
                 mostrarToast(
                     "El stock debe ser un número entero mayor o igual a 0."
                 );
 
                 return;
-
             }
-
 
             const variante =
                 stockVariantes.find(
@@ -3700,70 +3698,58 @@ document.addEventListener("DOMContentLoaded", () => {
                         Number(id)
                 );
 
-
             if (!variante) {
-
                 mostrarToast(
                     "No se encontró la variante."
                 );
 
                 return;
-
             }
 
+            const stockAnterior =
+                Number(variante.stock);
+
+            // No hacemos ninguna petición si el stock no cambió.
+            if (stockAnterior === stock) {
+
+                mostrarToast(
+                    "El stock no tuvo cambios."
+                );
+
+                return;
+            }
 
             try {
 
                 await apiFetch(
-                    `${CONFIG.ENDPOINTS.variantes}/${id}`,
+                    `${CONFIG.ENDPOINTS.variantes}/${id}/stock`,
                     {
                         method: "PUT",
 
                         body: JSON.stringify({
-
-                            producto: {
-                                id:
-                                    variante.producto.id
-                            },
-
-                            talle: {
-                                id:
-                                    variante.talle.id
-                            },
-
-                            color: {
-                                id:
-                                    variante.color.id
-                            },
-
                             stock: stock
-
                         })
                     }
                 );
 
-
                 mostrarToast(
-                    "Stock actualizado correctamente."
+                    "Stock actualizado y movimiento registrado."
                 );
-
 
                 await cargarStock();
 
             } catch (error) {
 
                 console.error(
+                    "Error actualizando stock:",
                     error
                 );
-
 
                 mostrarToast(
                     error.message ||
                     "No se pudo actualizar el stock."
                 );
-
             }
-
         };
 
 
@@ -3861,6 +3847,601 @@ document.addEventListener("DOMContentLoaded", () => {
         ?.addEventListener(
             "click",
             cargarStock
+        );
+
+    // ==========================================
+    // MOVIMIENTOS DE STOCK
+    // ==========================================
+
+    let movimientosStock = [];
+
+    let filtrosMovimientos = {
+        busqueda: "",
+        tipo: ""
+    };
+
+
+    // ==========================================
+    // CARGAR MOVIMIENTOS
+    // ==========================================
+
+    async function cargarMovimientos() {
+
+        const tbody =
+            document.getElementById(
+                "movementsTableBody"
+            );
+
+        if (!tbody) {
+            return;
+        }
+
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9">
+                    <div class="loading">
+                        Cargando movimientos...
+                    </div>
+                </td>
+            </tr>
+        `;
+
+
+        try {
+
+            movimientosStock =
+                await apiFetch(
+                    CONFIG.ENDPOINTS.movimientosStock
+                );
+
+
+            renderMovimientos();
+
+        } catch (error) {
+
+            console.error(
+                "Error cargando movimientos:",
+                error
+            );
+
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9">
+                        <div class="loading">
+                            No se pudieron cargar los movimientos.
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+        }
+
+    }
+
+
+    // ==========================================
+    // RENDER MOVIMIENTOS
+    // ==========================================
+
+    function renderMovimientos() {
+
+        const tbody =
+            document.getElementById(
+                "movementsTableBody"
+            );
+
+        if (!tbody) {
+            return;
+        }
+
+
+        let lista =
+            [...movimientosStock];
+
+
+        // ======================================
+        // BÚSQUEDA
+        // ======================================
+
+        if (filtrosMovimientos.busqueda) {
+
+            const texto =
+                filtrosMovimientos.busqueda
+                    .toLowerCase()
+                    .trim();
+
+
+            lista =
+                lista.filter(
+                    movimiento => {
+
+                        const producto =
+                            movimiento
+                                .variante
+                                ?.producto
+                                ?.nombre
+                                ?.toLowerCase() || "";
+
+
+                        const motivo =
+                            movimiento
+                                .motivo
+                                ?.toLowerCase() || "";
+
+
+                        const talle =
+                            movimiento
+                                .variante
+                                ?.talle
+                                ?.nombre
+                                ?.toLowerCase() || "";
+
+
+                        const color =
+                            movimiento
+                                .variante
+                                ?.color
+                                ?.nombre
+                                ?.toLowerCase() || "";
+
+
+                        return (
+
+                            producto.includes(texto) ||
+
+                            motivo.includes(texto) ||
+
+                            talle.includes(texto) ||
+
+                            color.includes(texto)
+
+                        );
+
+                    }
+                );
+
+        }
+
+
+        // ======================================
+        // FILTRO TIPO
+        // ======================================
+
+        if (filtrosMovimientos.tipo) {
+
+            lista =
+                lista.filter(
+                    movimiento =>
+                        movimiento.tipo ===
+                        filtrosMovimientos.tipo
+                );
+
+        }
+
+
+        // ======================================
+        // MÁS RECIENTE PRIMERO
+        // ======================================
+
+        lista.sort(
+            (a, b) =>
+                new Date(b.fecha) -
+                new Date(a.fecha)
+        );
+
+
+        actualizarEstadisticasMovimientos();
+
+
+        if (!lista.length) {
+
+            tbody.innerHTML = `
+                <tr>
+
+                    <td colspan="9">
+
+                        <div class="stock-empty-state">
+
+                            <div>
+                                ↕
+                            </div>
+
+                            <strong>
+                                No hay movimientos
+                            </strong>
+
+                            <span>
+                                No encontramos movimientos con los filtros seleccionados.
+                            </span>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        tbody.innerHTML =
+            lista.map(
+                movimiento => {
+
+                    const variante =
+                        movimiento.variante;
+
+
+                    const producto =
+                        variante
+                            ?.producto
+                            ?.nombre ||
+                        "Sin producto";
+
+
+                    const talle =
+                        variante
+                            ?.talle
+                            ?.nombre ||
+                        "-";
+
+
+                    const color =
+                        variante
+                            ?.color
+                            ?.nombre ||
+                        "-";
+
+
+                    const codigoHex =
+                        variante
+                            ?.color
+                            ?.codigoHex ||
+                        "#cccccc";
+
+
+                    const tipo =
+                        movimiento.tipo ||
+                        "";
+
+
+                    const cantidad =
+                        Number(
+                            movimiento.cantidad ||
+                            0
+                        );
+
+
+                    const stockAnterior =
+                        Number(
+                            movimiento.stockAnterior ||
+                            0
+                        );
+
+
+                    const stockPosterior =
+                        Number(
+                            movimiento.stockPosterior ||
+                            0
+                        );
+
+
+                    return `
+                        <tr>
+
+                            <td>
+                                ${formatearFechaPedido(
+                                    movimiento.fecha
+                                )}
+                            </td>
+
+
+                            <td>
+
+                                <span
+                                    class="movement-badge movement-${tipo.toLowerCase()}"
+                                >
+                                    ${formatearTipoMovimiento(
+                                        tipo
+                                    )}
+                                </span>
+
+                            </td>
+
+
+                            <td>
+
+                                <div class="movement-product">
+
+                                    <strong>
+                                        ${escapeHtml(
+                                            producto
+                                        )}
+                                    </strong>
+
+                                    <span>
+                                        Variante #${variante?.id || "-"}
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+
+                            <td>
+
+                                <span class="stock-size">
+                                    ${escapeHtml(
+                                        talle
+                                    )}
+                                </span>
+
+                            </td>
+
+
+                            <td>
+
+                                <div class="stock-color">
+
+                                    <span
+                                        class="stock-color-dot"
+                                        style="
+                                            background:${escapeHtml(
+                                                codigoHex
+                                            )}
+                                        "
+                                    ></span>
+
+                                    ${escapeHtml(
+                                        color
+                                    )}
+
+                                </div>
+
+                            </td>
+
+
+                            <td>
+
+                                <strong
+                                    class="movement-quantity movement-${tipo.toLowerCase()}"
+                                >
+                                    ${obtenerSignoMovimiento(tipo)}
+                                    ${cantidad}
+                                </strong>
+
+                            </td>
+
+
+                            <td>
+
+                                ${stockAnterior}
+
+                            </td>
+
+
+                            <td>
+
+                                <strong>
+                                    ${stockPosterior}
+                                </strong>
+
+                            </td>
+
+
+                            <td>
+
+                                <span class="movement-reason">
+                                    ${escapeHtml(
+                                        movimiento.motivo ||
+                                        "-"
+                                    )}
+                                </span>
+
+                            </td>
+
+                        </tr>
+                    `;
+
+                }
+            ).join("");
+
+    }
+
+
+    // ==========================================
+    // ESTADÍSTICAS MOVIMIENTOS
+    // ==========================================
+
+    function actualizarEstadisticasMovimientos() {
+
+        const total =
+            movimientosStock.length;
+
+
+        const ventas =
+            movimientosStock.filter(
+                movimiento =>
+                    movimiento.tipo ===
+                    "VENTA"
+            ).length;
+
+
+        const devoluciones =
+            movimientosStock.filter(
+                movimiento =>
+                    movimiento.tipo ===
+                    "DEVOLUCION"
+            ).length;
+
+
+        const entradas =
+            movimientosStock.filter(
+                movimiento =>
+                    movimiento.tipo ===
+                    "ENTRADA"
+            ).length;
+
+
+        const totalElement =
+            document.getElementById(
+                "movimientosTotal"
+            );
+
+
+        const ventasElement =
+            document.getElementById(
+                "movimientosVentas"
+            );
+
+
+        const devolucionesElement =
+            document.getElementById(
+                "movimientosDevoluciones"
+            );
+
+
+        const entradasElement =
+            document.getElementById(
+                "movimientosEntradas"
+            );
+
+
+        if (totalElement) {
+            totalElement.textContent =
+                total;
+        }
+
+
+        if (ventasElement) {
+            ventasElement.textContent =
+                ventas;
+        }
+
+
+        if (devolucionesElement) {
+            devolucionesElement.textContent =
+                devoluciones;
+        }
+
+
+        if (entradasElement) {
+            entradasElement.textContent =
+                entradas;
+        }
+
+    }
+
+
+    // ==========================================
+    // FORMATEAR TIPO
+    // ==========================================
+
+    function formatearTipoMovimiento(
+        tipo
+    ) {
+
+        const tipos = {
+
+            ENTRADA: "Entrada",
+
+            SALIDA: "Salida",
+
+            AJUSTE: "Ajuste",
+
+            VENTA: "Venta",
+
+            DEVOLUCION: "Devolución"
+
+        };
+
+
+        return tipos[tipo] ||
+            tipo;
+
+    }
+
+
+    // ==========================================
+    // SIGNO
+    // ==========================================
+
+    function obtenerSignoMovimiento(
+        tipo
+    ) {
+
+        if (
+            tipo === "VENTA" ||
+            tipo === "SALIDA"
+        ) {
+
+            return "-";
+
+        }
+
+
+        if (
+            tipo === "ENTRADA" ||
+            tipo === "DEVOLUCION"
+        ) {
+
+            return "+";
+
+        }
+
+
+        return "";
+    }
+
+
+    // ==========================================
+    // EVENTOS
+    // ==========================================
+
+    document
+        .getElementById(
+            "movementSearch"
+        )
+        ?.addEventListener(
+            "input",
+            event => {
+
+                filtrosMovimientos.busqueda =
+                    event.target.value;
+
+                renderMovimientos();
+
+            }
+        );
+
+
+    document
+        .getElementById(
+            "movementTypeFilter"
+        )
+        ?.addEventListener(
+            "change",
+            event => {
+
+                filtrosMovimientos.tipo =
+                    event.target.value;
+
+                renderMovimientos();
+
+            }
+        );
+
+
+    document
+        .getElementById(
+            "reloadMovimientos"
+        )
+        ?.addEventListener(
+            "click",
+            cargarMovimientos
         );
 
 

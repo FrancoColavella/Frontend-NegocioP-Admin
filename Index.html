@@ -83,21 +83,32 @@
 
         <p class="nav-title">VENTAS</p>
 
-        <button
-            class="nav-item"
-            data-section="pedidos"
-        >
-            <span class="nav-icon">🛒</span>
-            <span>Pedidos</span>
-        </button>
+            <button
+                class="nav-item"
+                data-section="pedidos"
+            >
+                <span class="nav-icon">🛒</span>
+                <span>Pedidos</span>
+            </button>
 
-        <button
-            class="nav-item"
-            data-section="stock"
-        >
-            <span class="nav-icon">▦</span>
-            <span>Stock</span>
-        </button>
+
+            <p class="nav-title">INVENTARIO</p>
+
+            <button
+                class="nav-item"
+                data-section="stock"
+            >
+                <span class="nav-icon">▦</span>
+                <span>Stock</span>
+            </button>
+
+            <button
+                class="nav-item"
+                data-section="movimientos"
+            >
+                <span class="nav-icon">↕</span>
+                <span>Movimientos</span>
+            </button>
 
     </nav>
 
@@ -1096,6 +1107,264 @@
 
                                     <div class="loading">
                                         Cargando stock...
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ==================================
+            MOVIMIENTOS DE STOCK
+        ================================== -->
+
+        <section
+            class="page-section"
+            id="section-movimientos"
+        >
+
+            <div class="section-toolbar">
+
+                <div>
+
+                    <span class="section-kicker">
+                        Inventario
+                    </span>
+
+                    <h2>
+                        Movimientos de stock
+                    </h2>
+
+                    <p>
+                        Consultá el historial completo de entradas,
+                        salidas, ventas, devoluciones y ajustes.
+                    </p>
+
+                </div>
+
+                <button
+                    class="secondary-button"
+                    id="reloadMovimientos"
+                    type="button"
+                >
+                    ↻ Actualizar
+                </button>
+
+            </div>
+
+
+            <!-- ==================================
+                RESUMEN
+            ================================== -->
+
+            <div class="movement-stats">
+
+                <div class="movement-stat-card">
+
+                    <div class="movement-stat-icon">
+                        ↕
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Total movimientos
+                        </span>
+
+                        <strong id="movimientosTotal">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="movement-stat-card">
+
+                    <div class="movement-stat-icon movement-sale">
+                        ↓
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Ventas
+                        </span>
+
+                        <strong id="movimientosVentas">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="movement-stat-card">
+
+                    <div class="movement-stat-icon movement-return">
+                        ↑
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Devoluciones
+                        </span>
+
+                        <strong id="movimientosDevoluciones">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="movement-stat-card">
+
+                    <div class="movement-stat-icon movement-entry">
+                        +
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Entradas
+                        </span>
+
+                        <strong id="movimientosEntradas">
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==================================
+                FILTROS
+            ================================== -->
+
+            <div class="table-card movement-card">
+
+                <div class="movement-filters">
+
+                    <input
+                        type="text"
+                        id="movementSearch"
+                        class="stock-filter"
+                        placeholder="Buscar producto o motivo..."
+                    >
+
+
+                    <select
+                        id="movementTypeFilter"
+                        class="stock-filter"
+                    >
+
+                        <option value="">
+                            Todos los movimientos
+                        </option>
+
+                        <option value="ENTRADA">
+                            Entrada
+                        </option>
+
+                        <option value="SALIDA">
+                            Salida
+                        </option>
+
+                        <option value="AJUSTE">
+                            Ajuste
+                        </option>
+
+                        <option value="VENTA">
+                            Venta
+                        </option>
+
+                        <option value="DEVOLUCION">
+                            Devolución
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- ==================================
+                    TABLA
+                ================================== -->
+
+                <div class="table-container">
+
+                    <table class="movements-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Fecha
+                                </th>
+
+                                <th>
+                                    Tipo
+                                </th>
+
+                                <th>
+                                    Producto
+                                </th>
+
+                                <th>
+                                    Talle
+                                </th>
+
+                                <th>
+                                    Color
+                                </th>
+
+                                <th>
+                                    Cantidad
+                                </th>
+
+                                <th>
+                                    Stock anterior
+                                </th>
+
+                                <th>
+                                    Stock posterior
+                                </th>
+
+                                <th>
+                                    Motivo
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="movementsTableBody">
+
+                            <tr>
+
+                                <td colspan="9">
+
+                                    <div class="loading">
+                                        Cargando movimientos...
                                     </div>
 
                                 </td>

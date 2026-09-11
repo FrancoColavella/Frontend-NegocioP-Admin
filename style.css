@@ -2377,3 +2377,195 @@ td {
 
 }
 
+/* ==========================================
+   MOVIMIENTOS DE STOCK
+========================================== */
+
+.movement-stats {
+    display: grid;
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+
+.movement-stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+
+.movement-stat-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--surface-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 18px;
+}
+
+
+.movement-sale {
+    background: var(--danger-bg);
+    color: var(--danger);
+}
+
+
+.movement-return {
+    background: var(--blue-bg);
+    color: var(--blue);
+}
+
+
+.movement-entry {
+    background: var(--success-bg);
+    color: var(--success);
+}
+
+
+.movement-stat-card span {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+
+.movement-stat-card strong {
+    font-size: 22px;
+}
+
+
+.movement-filters {
+    display: flex;
+    gap: 12px;
+    padding: 18px;
+    border-bottom: 1px solid var(--border);
+}
+
+
+.movement-filters .stock-filter {
+    flex: 1;
+}
+
+
+.movements-table {
+    min-width: 1100px;
+}
+
+
+.movements-table th {
+    white-space: nowrap;
+}
+
+
+.movements-table td {
+    vertical-align: middle;
+}
+
+
+.movement-product {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+
+.movement-product strong {
+    font-size: 13px;
+}
+
+
+.movement-product span {
+    font-size: 11px;
+    color: var(--text-light);
+}
+
+
+.movement-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+
+.movement-venta {
+    background: var(--danger-bg);
+    color: var(--danger);
+}
+
+
+.movement-devolucion {
+    background: var(--blue-bg);
+    color: var(--blue);
+}
+
+
+.movement-entrada {
+    background: var(--success-bg);
+    color: var(--success);
+}
+
+
+.movement-salida {
+    background: var(--warning-bg);
+    color: var(--warning);
+}
+
+
+.movement-ajuste {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+
+.movement-quantity {
+    font-size: 14px;
+}
+
+
+.movement-reason {
+    display: block;
+    max-width: 220px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+
+@media (max-width: 1000px) {
+
+    .movement-stats {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (max-width: 650px) {
+
+    .movement-stats {
+        grid-template-columns: 1fr;
+    }
+
+
+    .movement-filters {
+        flex-direction: column;
+    }
+
+}

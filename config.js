@@ -23,7 +23,9 @@ const CONFIG = {
 
         variantes: "/variantes",
 
-        pedidos: "/pedidos"
+        pedidos: "/pedidos",
+
+        movimientosStock: "/movimientos-stock"
 
     }
 
