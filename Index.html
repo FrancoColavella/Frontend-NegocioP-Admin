@@ -837,9 +837,8 @@
         </section>
 
         <!-- ==================================
-            STOCK
+        STOCK
         ================================== -->
-
         <section
             class="page-section"
             id="section-stock"
@@ -848,6 +847,7 @@
             <div class="section-toolbar">
 
                 <div>
+
                     <span class="section-kicker">
                         Inventario
                     </span>
@@ -859,11 +859,13 @@
                     <p>
                         Controlá las variantes y cantidades disponibles.
                     </p>
+
                 </div>
 
                 <button
                     class="secondary-button"
                     id="reloadStock"
+                    type="button"
                 >
                     ↻ Actualizar
                 </button>
@@ -871,9 +873,9 @@
             </div>
 
 
-            <!-- ================================
-                RESUMEN
-            ================================= -->
+            <!-- ==================================
+            ESTADÍSTICAS STOCK
+            ================================== -->
 
             <div class="stock-stats">
 
@@ -884,13 +886,15 @@
                     </div>
 
                     <div>
+
                         <span>
-                            Variantes
+                            Total de variantes
                         </span>
 
                         <strong id="stockTotalVariantes">
-                            -
+                            0
                         </strong>
+
                     </div>
 
                 </div>
@@ -903,13 +907,15 @@
                     </div>
 
                     <div>
+
                         <span>
                             En stock
                         </span>
 
                         <strong id="stockEnStock">
-                            -
+                            0
                         </strong>
+
                     </div>
 
                 </div>
@@ -918,17 +924,19 @@
                 <div class="stock-stat-card">
 
                     <div class="stock-stat-icon stock-low">
-                        !
+                        ⚠
                     </div>
 
                     <div>
+
                         <span>
                             Stock bajo
                         </span>
 
                         <strong id="stockBajo">
-                            -
+                            0
                         </strong>
+
                     </div>
 
                 </div>
@@ -937,17 +945,19 @@
                 <div class="stock-stat-card">
 
                     <div class="stock-stat-icon stock-empty">
-                        0
+                        !
                     </div>
 
                     <div>
+
                         <span>
                             Sin stock
                         </span>
 
                         <strong id="stockSinStock">
-                            -
+                            0
                         </strong>
+
                     </div>
 
                 </div>
@@ -955,36 +965,31 @@
             </div>
 
 
-            <!-- ================================
-                FILTROS
-            ================================= -->
+            <!-- ==================================
+            FILTROS
+            ================================== -->
 
             <div class="table-card stock-card">
 
                 <div class="stock-filters">
 
-                    <div class="search-box">
-
-                        <span>
-                            ⌕
-                        </span>
-
-                        <input
-                            type="text"
-                            id="stockSearch"
-                            placeholder="Buscar producto..."
-                        >
-
-                    </div>
+                    <input
+                        type="text"
+                        id="stockSearch"
+                        class="stock-filter"
+                        placeholder="Buscar producto, talle o color..."
+                    >
 
 
                     <select
                         id="stockCategoryFilter"
                         class="stock-filter"
                     >
+
                         <option value="">
                             Todas las categorías
                         </option>
+
                     </select>
 
 
@@ -992,9 +997,11 @@
                         id="stockSizeFilter"
                         class="stock-filter"
                     >
+
                         <option value="">
                             Todos los talles
                         </option>
+
                     </select>
 
 
@@ -1002,9 +1009,11 @@
                         id="stockColorFilter"
                         class="stock-filter"
                     >
+
                         <option value="">
                             Todos los colores
                         </option>
+
                     </select>
 
 
@@ -1012,6 +1021,7 @@
                         id="stockStatusFilter"
                         class="stock-filter"
                     >
+
                         <option value="">
                             Todos los estados
                         </option>
@@ -1033,9 +1043,9 @@
                 </div>
 
 
-                <!-- ================================
-                    TABLA
-                ================================= -->
+                <!-- ==================================
+                TABLA
+                ================================== -->
 
                 <div class="table-container">
 
@@ -1043,54 +1053,54 @@
 
                         <thead>
 
-                        <tr>
+                            <tr>
 
-                            <th>
-                                Producto
-                            </th>
+                                <th>
+                                    Producto
+                                </th>
 
-                            <th>
-                                Categoría
-                            </th>
+                                <th>
+                                    Categoría
+                                </th>
 
-                            <th>
-                                Talle
-                            </th>
+                                <th>
+                                    Talle
+                                </th>
 
-                            <th>
-                                Color
-                            </th>
+                                <th>
+                                    Color
+                                </th>
 
-                            <th>
-                                Stock
-                            </th>
+                                <th>
+                                    Stock
+                                </th>
 
-                            <th>
-                                Estado
-                            </th>
+                                <th>
+                                    Estado
+                                </th>
 
-                            <th>
-                                Acción
-                            </th>
+                                <th>
+                                    Acción
+                                </th>
 
-                        </tr>
+                            </tr>
 
                         </thead>
 
 
                         <tbody id="stockTableBody">
 
-                        <tr>
+                            <tr>
 
-                            <td colspan="7">
+                                <td colspan="7">
 
-                                <div class="loading">
-                                    Cargando stock...
-                                </div>
+                                    <div class="loading">
+                                        Cargando stock...
+                                    </div>
 
-                            </td>
+                                </td>
 
-                        </tr>
+                            </tr>
 
                         </tbody>
 
@@ -1101,6 +1111,7 @@
             </div>
 
         </section>
+
 
     </div>
 
