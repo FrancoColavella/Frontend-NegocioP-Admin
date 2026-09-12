@@ -2976,3 +2976,57 @@ td {
 
     box-sizing: border-box;
 }
+
+/* ==========================================
+   CRUD COLORES
+========================================== */
+
+.small-modal {
+    max-width: 520px;
+}
+
+.color-card-main {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.color-card-main h3 {
+    margin: 0 0 4px;
+}
+
+.simple-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-color);
+}
+
+.color-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.color-input-wrapper input[type="color"] {
+    width: 52px;
+    height: 42px;
+    padding: 3px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--card-background);
+    cursor: pointer;
+}
+
+.color-input-wrapper input[type="text"] {
+    flex: 1;
+}
+
+.form-help {
+    display: block;
+    margin-top: 6px;
+    color: var(--text-secondary);
+    font-size: 12px;
+}

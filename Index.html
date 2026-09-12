@@ -607,6 +607,14 @@
                     </p>
                 </div>
 
+                <button
+                    class="primary-button"
+                    id="newColorButton"
+                    type="button"
+                >
+                    + Nuevo color
+                </button>
+
             </div>
 
 
@@ -1791,6 +1799,144 @@
                     id="saveProductButton"
                 >
                     Guardar producto
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- ==========================================
+     MODAL COLOR
+========================================== -->
+
+<div
+    class="modal-overlay"
+    id="colorModal"
+>
+
+    <div class="modal small-modal">
+
+        <div class="modal-header">
+
+            <div>
+                <span class="modal-kicker">
+                    Variantes
+                </span>
+
+                <h2 id="colorModalTitle">
+                    Nuevo color
+                </h2>
+            </div>
+
+            <button
+                class="modal-close"
+                id="closeColorModal"
+                type="button"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="colorForm">
+
+            <input
+                type="hidden"
+                id="colorId"
+            >
+
+
+            <div class="form-group">
+
+                <label for="colorName">
+                    Nombre
+                </label>
+
+                <input
+                    type="text"
+                    id="colorName"
+                    placeholder="Ej. Negro"
+                    maxlength="100"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="colorHex">
+                    Código HEX
+                </label>
+
+                <div class="color-input-wrapper">
+
+                    <input
+                        type="color"
+                        id="colorPicker"
+                        value="#000000"
+                    >
+
+                    <input
+                        type="text"
+                        id="colorHex"
+                        placeholder="#000000"
+                        maxlength="7"
+                        value="#000000"
+                        required
+                    >
+
+                </div>
+
+                <small class="form-help">
+                    Formato requerido: #RRGGBB
+                </small>
+
+            </div>
+
+
+            <div class="form-check">
+
+                <input
+                    type="checkbox"
+                    id="colorActive"
+                    checked
+                >
+
+                <label for="colorActive">
+                    Color activo
+                </label>
+
+            </div>
+
+
+            <div
+                class="form-error"
+                id="colorFormError"
+            ></div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    id="cancelColor"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                    id="saveColorButton"
+                >
+                    Guardar color
                 </button>
 
             </div>

@@ -739,10 +739,11 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderColores() {
 
         const container =
-            document.getElementById(
-                "colorsGrid"
-            );
+            document.getElementById("colorsGrid");
 
+        if (!container) {
+            return;
+        }
 
         if (!colores.length) {
 
@@ -759,38 +760,78 @@ document.addEventListener("DOMContentLoaded", () => {
         container.innerHTML =
             colores.map(color => {
 
+                const activo =
+                    color.activo === true;
+
                 return `
                     <div class="simple-card">
 
                         <div class="simple-card-header">
 
-                            <div
-                                class="color-preview"
-                                style="background:${escapeHtml(
-                                    color.codigoHex
-                                )}"
-                            ></div>
+                            <div class="color-card-main">
+
+                                <div
+                                    class="color-preview"
+                                    style="background:${escapeHtml(
+                                        color.codigoHex || "#cccccc"
+                                    )}"
+                                ></div>
+
+                                <div>
+
+                                    <h3>
+                                        ${escapeHtml(
+                                            color.nombre
+                                        )}
+                                    </h3>
+
+                                    <div class="color-code">
+                                        ${escapeHtml(
+                                            color.codigoHex || "#------"
+                                        )}
+                                    </div>
+
+                                </div>
+
+                            </div>
+
 
                             <span class="status-badge ${
-                                color.activo
+                                activo
                                     ? "status-active"
                                     : "status-inactive"
                             }">
+
                                 ${
-                                    color.activo
+                                    activo
                                         ? "Activo"
                                         : "Inactivo"
                                 }
+
                             </span>
 
                         </div>
 
-                        <h3>
-                            ${escapeHtml(color.nombre)}
-                        </h3>
 
-                        <div class="color-code">
-                            ${escapeHtml(color.codigoHex)}
+                        <div class="simple-card-actions">
+
+                            <button
+                                type="button"
+                                class="secondary-button"
+                                onclick="editarColor(${color.id})"
+                            >
+                                Editar
+                            </button>
+
+                            <button
+                                type="button"
+                                class="icon-button delete"
+                                onclick="eliminarColor(${color.id})"
+                                title="Eliminar color"
+                            >
+                                ×
+                            </button>
+
                         </div>
 
                     </div>
@@ -798,6 +839,372 @@ document.addEventListener("DOMContentLoaded", () => {
 
             }).join("");
     }
+
+    // ==========================================
+    // CRUD COLORES
+    // ==========================================
+
+    let colorEditando = null;
+
+
+    // ==========================================
+    // ABRIR MODAL NUEVO COLOR
+    // ==========================================
+
+    function abrirModalColor(color = null) {
+
+        const modal =
+            document.getElementById("colorModal");
+
+        const form =
+            document.getElementById("colorForm");
+
+        const title =
+            document.getElementById("colorModalTitle");
+
+        const idInput =
+            document.getElementById("colorId");
+
+        const nameInput =
+            document.getElementById("colorName");
+
+        const hexInput =
+            document.getElementById("colorHex");
+
+        const picker =
+            document.getElementById("colorPicker");
+
+        const activeInput =
+            document.getElementById("colorActive");
+
+        const error =
+            document.getElementById("colorFormError");
+
+
+        form.reset();
+
+        error.textContent = "";
+        error.classList.remove("active");
+
+
+        if (color) {
+
+            colorEditando = color;
+
+            title.textContent =
+                "Editar color";
+
+            idInput.value =
+                color.id;
+
+            nameInput.value =
+                color.nombre || "";
+
+            hexInput.value =
+                color.codigoHex || "#000000";
+
+            picker.value =
+                color.codigoHex || "#000000";
+
+            activeInput.checked =
+                color.activo === true;
+
+        } else {
+
+            colorEditando = null;
+
+            title.textContent =
+                "Nuevo color";
+
+            idInput.value = "";
+
+            nameInput.value = "";
+
+            hexInput.value =
+                "#000000";
+
+            picker.value =
+                "#000000";
+
+            activeInput.checked =
+                true;
+        }
+
+
+        modal.classList.add("active");
+
+        setTimeout(() => {
+            nameInput.focus();
+        }, 100);
+
+    }
+
+
+    // ==========================================
+    // CERRAR MODAL
+    // ==========================================
+
+    function cerrarModalColor() {
+
+        const modal =
+            document.getElementById("colorModal");
+
+        modal.classList.remove("active");
+
+        colorEditando = null;
+
+    }
+
+
+    // ==========================================
+    // GUARDAR COLOR
+    // ==========================================
+
+    async function guardarColor(event) {
+
+        event.preventDefault();
+
+
+        const nameInput =
+            document.getElementById("colorName");
+
+        const hexInput =
+            document.getElementById("colorHex");
+
+        const activeInput =
+            document.getElementById("colorActive");
+
+        const error =
+            document.getElementById("colorFormError");
+
+        const saveButton =
+            document.getElementById("saveColorButton");
+
+
+        const nombre =
+            nameInput.value.trim();
+
+        const codigoHex =
+            hexInput.value.trim().toUpperCase();
+
+        const activo =
+            activeInput.checked;
+
+
+        error.textContent = "";
+        error.classList.remove("active");
+
+
+        if (!nombre) {
+
+            error.textContent =
+                "El nombre del color es obligatorio.";
+
+            error.classList.add("active");
+
+            return;
+        }
+
+
+        const hexValido =
+            /^#[0-9A-F]{6}$/.test(
+                codigoHex
+            );
+
+        if (!hexValido) {
+
+            error.textContent =
+                "El código HEX debe tener el formato #RRGGBB.";
+
+            error.classList.add("active");
+
+            return;
+        }
+
+
+        const payload = {
+            nombre,
+            codigoHex,
+            activo
+        };
+
+
+        const editando =
+            Boolean(colorEditando);
+
+
+        saveButton.disabled = true;
+
+        saveButton.textContent =
+            editando
+                ? "Guardando..."
+                : "Creando...";
+
+
+        try {
+
+            if (editando) {
+
+                await apiFetch(
+                    `${CONFIG.ENDPOINTS.colores}/${colorEditando.id}`,
+                    {
+                        method: "PUT",
+                        body: JSON.stringify(payload)
+                    }
+                );
+
+                mostrarToast(
+                    "Color actualizado correctamente."
+                );
+
+            } else {
+
+                await apiFetch(
+                    CONFIG.ENDPOINTS.colores,
+                    {
+                        method: "POST",
+                        body: JSON.stringify(payload)
+                    }
+                );
+
+                mostrarToast(
+                    "Color creado correctamente."
+                );
+
+            }
+
+
+            cerrarModalColor();
+
+            await cargarColores();
+
+        } catch (error) {
+
+            console.error(
+                "Error guardando color:",
+                error
+            );
+
+            error = error instanceof Error
+                ? error.message
+                : "No se pudo guardar el color.";
+
+            const errorElement =
+                document.getElementById(
+                    "colorFormError"
+                );
+
+            errorElement.textContent =
+                error;
+
+            errorElement.classList.add(
+                "active"
+            );
+
+        } finally {
+
+            saveButton.disabled =
+                false;
+
+            saveButton.textContent =
+                "Guardar color";
+        }
+
+    }
+
+
+    // ==========================================
+    // EDITAR COLOR
+    // ==========================================
+
+    window.editarColor =
+        function(id) {
+
+            const color =
+                colores.find(
+                    item =>
+                        Number(item.id) ===
+                        Number(id)
+                );
+
+            if (!color) {
+
+                mostrarToast(
+                    "No se encontró el color."
+                );
+
+                return;
+            }
+
+            abrirModalColor(color);
+
+        };
+
+
+    // ==========================================
+    // ELIMINAR COLOR
+    // ==========================================
+
+    window.eliminarColor =
+        async function(id) {
+
+            const color =
+                colores.find(
+                    item =>
+                        Number(item.id) ===
+                        Number(id)
+                );
+
+            if (!color) {
+                return;
+            }
+
+
+            const confirmado =
+                confirm(
+                    `¿Querés eliminar el color "${color.nombre}"?`
+                );
+
+
+            if (!confirmado) {
+                return;
+            }
+
+
+            try {
+
+                await apiFetch(
+                    `${CONFIG.ENDPOINTS.colores}/${id}`,
+                    {
+                        method: "DELETE"
+                    }
+                );
+
+
+                mostrarToast(
+                    "Color eliminado correctamente."
+                );
+
+
+                await cargarColores();
+
+
+            } catch (error) {
+
+                console.error(
+                    "Error eliminando color:",
+                    error
+                );
+
+
+                mostrarToast(
+                    error.message ||
+                    "No se pudo eliminar el color."
+                );
+
+            }
+
+        };
 
 
     // ==========================================
@@ -5571,6 +5978,109 @@ document.addEventListener("DOMContentLoaded", () => {
         ?.addEventListener(
             "click",
             cargarMovimientos
+        );
+
+    // ==========================================
+    // EVENTOS COLORES
+    // ==========================================
+
+    document
+        .getElementById("newColorButton")
+        ?.addEventListener(
+            "click",
+            () => abrirModalColor()
+        );
+
+
+    document
+        .getElementById("closeColorModal")
+        ?.addEventListener(
+            "click",
+            cerrarModalColor
+        );
+
+
+    document
+        .getElementById("cancelColor")
+        ?.addEventListener(
+            "click",
+            cerrarModalColor
+        );
+
+
+    document
+        .getElementById("colorForm")
+        ?.addEventListener(
+            "submit",
+            guardarColor
+        );
+
+
+    // Sincronizar color picker → HEX
+
+    document
+        .getElementById("colorPicker")
+        ?.addEventListener(
+            "input",
+            event => {
+
+                document.getElementById(
+                    "colorHex"
+                ).value =
+                    event.target.value
+                        .toUpperCase();
+
+            }
+        );
+
+
+    // Sincronizar HEX → color picker
+
+    document
+        .getElementById("colorHex")
+        ?.addEventListener(
+            "input",
+            event => {
+
+                const valor =
+                    event.target.value
+                        .trim()
+                        .toUpperCase();
+
+
+                if (
+                    /^#[0-9A-F]{6}$/.test(valor)
+                ) {
+
+                    document.getElementById(
+                        "colorPicker"
+                    ).value =
+                        valor;
+
+                }
+
+            }
+        );
+
+
+    // Cerrar haciendo click fuera del modal
+
+    document
+        .getElementById("colorModal")
+        ?.addEventListener(
+            "click",
+            event => {
+
+                if (
+                    event.target.id ===
+                    "colorModal"
+                ) {
+
+                    cerrarModalColor();
+
+                }
+
+            }
         );
 
 
