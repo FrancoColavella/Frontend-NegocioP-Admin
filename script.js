@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let talles = [];
     let colores = [];
     let variantes = [];
-
+    let imagenesProducto = [];
     let pedidos = [];
 
     let pedidoEditando = null;
@@ -965,8 +965,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
             cargarTallesVariantSelect();
             cargarColoresVariantSelect();
+            cargarColoresImagenSelect();
 
             cargarVariantesProducto(
+                producto.id
+            );
+
+            cargarImagenesProducto(
                 producto.id
             );
 
@@ -1003,6 +1008,30 @@ document.addEventListener("DOMContentLoaded", () => {
                     Guardá primero el producto para poder agregar variantes.
                 </div>
             `;
+
+            imagenesProducto = [];
+
+            document.getElementById(
+                "productImagesList"
+            ).innerHTML = `
+                <div class="variants-empty">
+                    Guardá primero el producto para poder agregar imágenes.
+                </div>
+            `;
+
+            cargarColoresImagenSelect();
+
+            document.getElementById(
+                "productImageColor"
+            ).value = "";
+
+            document.getElementById(
+                "productImageUrl"
+            ).value = "";
+
+            document.getElementById(
+                "productImageOrder"
+            ).value = 1;
 
         }
 
@@ -1614,6 +1643,217 @@ document.addEventListener("DOMContentLoaded", () => {
             mostrarToast(
                 error.message ||
                 "No se pudo eliminar la variante."
+            );
+        }
+    };
+
+    // ==========================================
+    // IMÁGENES DEL PRODUCTO
+    // ==========================================
+
+    async function cargarImagenesProducto(productoId) {
+
+        const container =
+            document.getElementById("productImagesList");
+
+        if (!container) {
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="loading">
+                Cargando imágenes...
+            </div>
+        `;
+
+        try {
+
+            imagenesProducto =
+                await apiFetch(
+                    `${CONFIG.ENDPOINTS.productos}/${productoId}/imagenes`
+                );
+
+            renderImagenesProducto();
+
+        } catch (error) {
+
+            console.error(
+                "Error cargando imágenes:",
+                error
+            );
+
+            container.innerHTML = `
+                <div class="variants-empty">
+                    No se pudieron cargar las imágenes.
+                </div>
+            `;
+        }
+    }
+
+
+    function cargarColoresImagenSelect() {
+
+        const select =
+            document.getElementById(
+                "productImageColor"
+            );
+
+        if (!select) {
+            return;
+        }
+
+        const coloresActivos =
+            colores.filter(
+                color => color.activo
+            );
+
+        select.innerHTML = `
+            <option value="">
+                Seleccionar color
+            </option>
+
+            ${coloresActivos.map(color => `
+                <option value="${color.id}">
+                    ${escapeHtml(color.nombre)}
+                </option>
+            `).join("")}
+        `;
+    }
+
+
+    function renderImagenesProducto() {
+
+        const container =
+            document.getElementById(
+                "productImagesList"
+            );
+
+        if (!container) {
+            return;
+        }
+
+        if (!imagenesProducto.length) {
+
+            container.innerHTML = `
+                <div class="variants-empty">
+                    Este producto todavía no tiene imágenes.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        container.innerHTML =
+            imagenesProducto.map(imagen => {
+
+                const color =
+                    imagen.color?.nombre ||
+                    "Sin color";
+
+                const codigo =
+                    imagen.color?.codigoHex ||
+                    "#cccccc";
+
+                return `
+                    <div
+                        class="product-image-row"
+                        data-image-id="${imagen.id}"
+                    >
+
+                        <div class="product-image-preview">
+
+                            <img
+                                src="${escapeHtml(imagen.url)}"
+                                alt="${escapeHtml(color)}"
+                                onerror="this.style.display='none';"
+                            >
+
+                        </div>
+
+
+                        <div class="product-image-info">
+
+                            <div class="product-image-color">
+
+                                <span
+                                    class="variant-color-preview"
+                                    style="background-color:${escapeHtml(codigo)}"
+                                ></span>
+
+                                <strong>
+                                    ${escapeHtml(color)}
+                                </strong>
+
+                            </div>
+
+                            <span class="product-image-url">
+                                ${escapeHtml(imagen.url)}
+                            </span>
+
+                            <span class="product-image-order">
+                                Orden: ${imagen.orden}
+                            </span>
+
+                        </div>
+
+
+                        <div class="variant-actions">
+
+                            <button
+                                type="button"
+                                class="variant-delete-button"
+                                onclick="eliminarImagenProducto(${imagen.id})"
+                                title="Eliminar imagen"
+                            >
+                                🗑
+                            </button>
+
+                        </div>
+
+                    </div>
+                `;
+
+            }).join("");
+    }
+
+
+    window.eliminarImagenProducto =
+    async function(id) {
+
+        const confirmar =
+            confirm(
+                "¿Querés eliminar esta imagen?"
+            );
+
+        if (!confirmar) {
+            return;
+        }
+
+        try {
+
+            await apiFetch(
+                `/imagenes/${id}`,
+                {
+                    method: "DELETE"
+                }
+            );
+
+            mostrarToast(
+                "Imagen eliminada correctamente."
+            );
+
+            await cargarImagenesProducto(
+                productoEditando.id
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            mostrarToast(
+                error.message ||
+                "No se pudo eliminar la imagen."
             );
         }
     };
