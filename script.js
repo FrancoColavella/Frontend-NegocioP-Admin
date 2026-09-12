@@ -1722,99 +1722,152 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     function renderImagenesProducto() {
+        const contenedor = document.getElementById("productImagesList");
 
-        const container =
-            document.getElementById(
-                "productImagesList"
-            );
-
-        if (!container) {
+        if (!contenedor) {
             return;
         }
 
-        if (!imagenesProducto.length) {
-
-            container.innerHTML = `
+        if (!imagenesProducto || imagenesProducto.length === 0) {
+            contenedor.innerHTML = `
                 <div class="variants-empty">
-                    Este producto todavía no tiene imágenes.
+                    No hay imágenes cargadas para este producto.
                 </div>
             `;
-
             return;
         }
 
+        // Agrupar imágenes por color
+        const grupos = {};
 
-        container.innerHTML =
-            imagenesProducto.map(imagen => {
+        imagenesProducto.forEach((imagen) => {
+            const colorId = imagen.color?.id ?? "sin-color";
 
-                const color =
-                    imagen.color?.nombre ||
-                    "Sin color";
+            if (!grupos[colorId]) {
+                grupos[colorId] = {
+                    color: imagen.color,
+                    imagenes: []
+                };
+            }
 
-                const codigo =
-                    imagen.color?.codigoHex ||
-                    "#cccccc";
+            grupos[colorId].imagenes.push(imagen);
+        });
+
+        // Ordenar las imágenes dentro de cada color
+        Object.values(grupos).forEach((grupo) => {
+            grupo.imagenes.sort((a, b) => {
+                return Number(a.orden || 0) - Number(b.orden || 0);
+            });
+        });
+
+        contenedor.innerHTML = Object.entries(grupos)
+            .map(([colorId, grupo]) => {
+
+                const nombreColor = grupo.color?.nombre || "Sin color";
+                const codigoColor = grupo.color?.codigoHex || "#cccccc";
 
                 return `
-                    <div
-                        class="product-image-row"
-                        data-image-id="${imagen.id}"
-                    >
+                    <div class="product-image-color-group">
 
-                        <div class="product-image-preview">
-
-                            <img
-                                src="${escapeHtml(imagen.url)}"
-                                alt="${escapeHtml(color)}"
-                                onerror="this.style.display='none';"
-                            >
-
-                        </div>
-
-
-                        <div class="product-image-info">
+                        <div class="product-image-group-header">
 
                             <div class="product-image-color">
-
                                 <span
                                     class="variant-color-preview"
-                                    style="background-color:${escapeHtml(codigo)}"
+                                    style="background-color: ${codigoColor};"
                                 ></span>
 
-                                <strong>
-                                    ${escapeHtml(color)}
-                                </strong>
+                                <strong>${nombreColor}</strong>
 
+                                <span class="product-image-count">
+                                    ${grupo.imagenes.length}
+                                    ${grupo.imagenes.length === 1 ? "foto" : "fotos"}
+                                </span>
                             </div>
-
-                            <span class="product-image-url">
-                                ${escapeHtml(imagen.url)}
-                            </span>
-
-                            <span class="product-image-order">
-                                Orden: ${imagen.orden}
-                            </span>
 
                         </div>
 
-
-                        <div class="variant-actions">
+                        <div class="product-image-gallery-wrapper">
 
                             <button
                                 type="button"
-                                class="variant-delete-button"
-                                onclick="eliminarImagenProducto(${imagen.id})"
-                                title="Eliminar imagen"
+                                class="product-image-gallery-button"
+                                onclick="desplazarGaleriaImagenes('${colorId}', -1)"
+                                aria-label="Ver imágenes anteriores"
                             >
-                                🗑
+                                ‹
+                            </button>
+
+                            <div
+                                class="product-image-gallery"
+                                id="product-image-gallery-${colorId}"
+                            >
+
+                                ${grupo.imagenes.map((imagen) => `
+                                    <div class="product-image-card">
+
+                                        <div class="product-image-preview">
+
+                                            <img
+                                                src="${imagen.url}"
+                                                alt="${nombreColor}"
+                                                onerror="this.style.display='none'"
+                                            >
+
+                                            <button
+                                                type="button"
+                                                class="product-image-delete"
+                                                onclick="eliminarImagenProducto(${imagen.id})"
+                                                title="Eliminar imagen"
+                                            >
+                                                ×
+                                            </button>
+
+                                        </div>
+
+                                        <div class="product-image-card-info">
+                                            <span class="product-image-order">
+                                                Orden: ${imagen.orden ?? 0}
+                                            </span>
+                                        </div>
+
+                                    </div>
+                                `).join("")}
+
+                            </div>
+
+                            <button
+                                type="button"
+                                class="product-image-gallery-button"
+                                onclick="desplazarGaleriaImagenes('${colorId}', 1)"
+                                aria-label="Ver imágenes siguientes"
+                            >
+                                ›
                             </button>
 
                         </div>
 
                     </div>
                 `;
+            })
+            .join("");
+    }
 
-            }).join("");
+    function desplazarGaleriaImagenes(colorId, direccion) {
+        const galeria = document.getElementById(
+            `product-image-gallery-${colorId}`
+        );
+
+        if (!galeria) {
+            return;
+        }
+
+        const desplazamiento = 300 * direccion;
+
+        galeria.scrollBy({
+            left: desplazamiento,
+            behavior: "smooth"
+        });
     }
 
 
@@ -1857,6 +1910,180 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         }
     };
+
+    // ==========================================
+    // AGREGAR IMAGEN DEL PRODUCTO
+    // ==========================================
+
+    document
+        .getElementById("addProductImageButton")
+        .addEventListener(
+            "click",
+            async () => {
+
+                const colorId =
+                    Number(
+                        document.getElementById(
+                            "productImageColor"
+                        ).value
+                    );
+
+                const url =
+                    document.getElementById(
+                        "productImageUrl"
+                    ).value.trim();
+
+                const orden =
+                    Number(
+                        document.getElementById(
+                            "productImageOrder"
+                        ).value
+                    );
+
+                const errorElement =
+                    document.getElementById(
+                        "productImageFormError"
+                    );
+
+                errorElement.classList.remove(
+                    "active"
+                );
+
+
+                if (!productoEditando) {
+
+                    errorElement.textContent =
+                        "Primero guardá el producto.";
+
+                    errorElement.classList.add(
+                        "active"
+                    );
+
+                    return;
+                }
+
+
+                if (!colorId) {
+
+                    errorElement.textContent =
+                        "Seleccioná un color.";
+
+                    errorElement.classList.add(
+                        "active"
+                    );
+
+                    return;
+                }
+
+
+                if (!url) {
+
+                    errorElement.textContent =
+                        "Ingresá la URL de la imagen.";
+
+                    errorElement.classList.add(
+                        "active"
+                    );
+
+                    return;
+                }
+
+
+                if (
+                    !Number.isInteger(orden) ||
+                    orden < 0
+                ) {
+
+                    errorElement.textContent =
+                        "El orden debe ser un número entero mayor o igual a 0.";
+
+                    errorElement.classList.add(
+                        "active"
+                    );
+
+                    return;
+                }
+
+
+                const button =
+                    document.getElementById(
+                        "addProductImageButton"
+                    );
+
+                const textoOriginal =
+                    button.textContent;
+
+                button.disabled = true;
+
+                button.textContent =
+                    "Agregando...";
+
+
+                try {
+
+                    await apiFetch(
+                        `${CONFIG.ENDPOINTS.productos}/${productoEditando.id}/imagenes`,
+                        {
+                            method: "POST",
+
+                            body: JSON.stringify({
+                                colorId: colorId,
+                                url: url,
+                                orden: orden
+                            })
+                        }
+                    );
+
+
+                    mostrarToast(
+                        "Imagen agregada correctamente."
+                    );
+
+
+                    document.getElementById(
+                        "productImageColor"
+                    ).value = "";
+
+                    document.getElementById(
+                        "productImageUrl"
+                    ).value = "";
+
+                    document.getElementById(
+                        "productImageOrder"
+                    ).value = 1;
+
+
+                    await cargarImagenesProducto(
+                        productoEditando.id
+                    );
+
+                } catch (error) {
+
+                    console.error(error);
+
+                    errorElement.textContent =
+                        error.message ||
+                        "No se pudo agregar la imagen.";
+
+                    errorElement.classList.add(
+                        "active"
+                    );
+
+                } finally {
+
+                    button.disabled = false;
+
+                    button.textContent =
+                        textoOriginal;
+                }
+            }
+        );
+
+
+    // ==========================================
+    // RESTO DE EVENTOS
+    // ==========================================
+
 
 
     document
