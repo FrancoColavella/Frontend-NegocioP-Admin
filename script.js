@@ -616,6 +616,7 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
 
             return;
+
         }
 
 
@@ -638,24 +639,30 @@ document.addEventListener("DOMContentLoaded", () => {
                                 </span>
 
                                 <h3>
-                                    ${escapeHtml(categoria.nombre)}
+                                    ${escapeHtml(
+                                        categoria.nombre
+                                    )}
                                 </h3>
 
                             </div>
+
 
                             <span class="status-badge ${
                                 activa
                                     ? "status-active"
                                     : "status-inactive"
                             }">
+
                                 ${
                                     activa
                                         ? "Activa"
                                         : "Inactiva"
                                 }
+
                             </span>
 
                         </div>
+
 
                         <p>
                             ${escapeHtml(
@@ -664,11 +671,539 @@ document.addEventListener("DOMContentLoaded", () => {
                             )}
                         </p>
 
+
+                        <div class="simple-card-actions">
+
+                            <button
+                                type="button"
+                                class="secondary-button"
+                                onclick="editarCategoria(${categoria.id})"
+                            >
+                                ✎ Editar
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="icon-button delete"
+                                onclick="eliminarCategoria(${categoria.id})"
+                                title="Eliminar"
+                            >
+                                ×
+                            </button>
+
+                        </div>
+
                     </div>
                 `;
 
             }).join("");
+
     }
+
+    // ==========================================
+    // CRUD CATEGORÍAS
+    // ==========================================
+
+    let categoriaEditando = null;
+
+
+    function abrirModalCategoria(
+        categoria = null
+    ) {
+
+        categoriaEditando = categoria;
+
+
+        const errorElement =
+            document.getElementById(
+                "categoryFormError"
+            );
+
+
+        errorElement.textContent = "";
+
+        errorElement.classList.remove(
+            "active"
+        );
+
+
+        const form =
+            document.getElementById(
+                "categoryForm"
+            );
+
+
+        if (categoria) {
+
+            document.getElementById(
+                "categoryModalTitle"
+            ).textContent =
+                "Editar categoría";
+
+
+            document.getElementById(
+                "categoryId"
+            ).value =
+                categoria.id;
+
+
+            document.getElementById(
+                "categoryName"
+            ).value =
+                categoria.nombre || "";
+
+
+            document.getElementById(
+                "categoryDescription"
+            ).value =
+                categoria.descripcion || "";
+
+
+            document.getElementById(
+                "categoryActive"
+            ).checked =
+                categoria.activa;
+
+        } else {
+
+            form.reset();
+
+
+            document.getElementById(
+                "categoryModalTitle"
+            ).textContent =
+                "Nueva categoría";
+
+
+            document.getElementById(
+                "categoryId"
+            ).value =
+                "";
+
+
+            document.getElementById(
+                "categoryActive"
+            ).checked =
+                true;
+
+        }
+
+
+        document
+            .getElementById("categoryModal")
+            .classList.add("active");
+
+
+        setTimeout(() => {
+
+            document
+                .getElementById("categoryName")
+                .focus();
+
+        }, 100);
+
+    }
+
+
+    function cerrarModalCategoria() {
+
+        document
+            .getElementById("categoryModal")
+            .classList.remove("active");
+
+
+        categoriaEditando = null;
+
+    }
+
+
+    async function guardarCategoria(
+        event
+    ) {
+
+        event.preventDefault();
+
+
+        const nombre =
+            document
+                .getElementById(
+                    "categoryName"
+                )
+                .value
+                .trim();
+
+
+        const descripcion =
+            document
+                .getElementById(
+                    "categoryDescription"
+                )
+                .value
+                .trim();
+
+
+        const activa =
+            document
+                .getElementById(
+                    "categoryActive"
+                )
+                .checked;
+
+
+        const errorElement =
+            document.getElementById(
+                "categoryFormError"
+            );
+
+
+        errorElement.textContent = "";
+
+        errorElement.classList.remove(
+            "active"
+        );
+
+
+        if (!nombre) {
+
+            errorElement.textContent =
+                "El nombre de la categoría es obligatorio.";
+
+            errorElement.classList.add(
+                "active"
+            );
+
+            return;
+
+        }
+
+
+        const categoriaDuplicada =
+            categorias.some(categoria => {
+
+                const mismoNombre =
+                    categoria.nombre
+                        ?.trim()
+                        .toLowerCase() ===
+                    nombre.toLowerCase();
+
+
+                const mismoId =
+                    categoriaEditando &&
+                    Number(categoria.id) ===
+                    Number(
+                        categoriaEditando.id
+                    );
+
+
+                return (
+                    mismoNombre &&
+                    !mismoId
+                );
+
+            });
+
+
+        if (categoriaDuplicada) {
+
+            errorElement.textContent =
+                "Ya existe una categoría con ese nombre.";
+
+            errorElement.classList.add(
+                "active"
+            );
+
+            return;
+
+        }
+
+
+        const datos = {
+
+            nombre: nombre,
+
+            descripcion:
+                descripcion || null,
+
+            activa: activa
+
+        };
+
+
+        const boton =
+            document.getElementById(
+                "saveCategoryButton"
+            );
+
+
+        const textoOriginal =
+            boton.textContent;
+
+
+        boton.disabled = true;
+
+        boton.textContent =
+            "Guardando...";
+
+
+        try {
+
+            if (categoriaEditando) {
+
+                await apiFetch(
+                    `${CONFIG.ENDPOINTS.categorias}/${categoriaEditando.id}`,
+                    {
+                        method: "PUT",
+                        body: JSON.stringify(
+                            datos
+                        )
+                    }
+                );
+
+
+                mostrarToast(
+                    "Categoría actualizada correctamente."
+                );
+
+            } else {
+
+                await apiFetch(
+                    CONFIG.ENDPOINTS.categorias,
+                    {
+                        method: "POST",
+                        body: JSON.stringify(
+                            datos
+                        )
+                    }
+                );
+
+
+                mostrarToast(
+                    "Categoría creada correctamente."
+                );
+
+            }
+
+
+            cerrarModalCategoria();
+
+
+            await cargarCategorias();
+
+
+            /*
+            * Actualizamos los selectores
+            * de categoría utilizados por
+            * productos y stock.
+            */
+            cargarCategoriasSelect();
+
+
+            if (
+                typeof cargarCategoriasStockFilter ===
+                "function"
+            ) {
+
+                cargarCategoriasStockFilter();
+
+            }
+
+
+        } catch (error) {
+
+            console.error(
+                "Error guardando categoría:",
+                error
+            );
+
+
+            errorElement.textContent =
+                error.message ||
+                "No se pudo guardar la categoría.";
+
+
+            errorElement.classList.add(
+                "active"
+            );
+
+        } finally {
+
+            boton.disabled = false;
+
+            boton.textContent =
+                textoOriginal;
+
+        }
+
+    }
+
+
+    window.editarCategoria =
+    function(id) {
+
+        const categoria =
+            categorias.find(
+                item =>
+                    Number(item.id) ===
+                    Number(id)
+            );
+
+
+        if (!categoria) {
+
+            mostrarToast(
+                "No se encontró la categoría."
+            );
+
+            return;
+
+        }
+
+
+        abrirModalCategoria(
+            categoria
+        );
+
+    };
+
+
+    window.eliminarCategoria =
+    async function(id) {
+
+        const categoria =
+            categorias.find(
+                item =>
+                    Number(item.id) ===
+                    Number(id)
+            );
+
+
+        if (!categoria) {
+
+            mostrarToast(
+                "No se encontró la categoría."
+            );
+
+            return;
+
+        }
+
+
+        const confirmar =
+            confirm(
+                `¿Querés eliminar la categoría "${categoria.nombre}"?`
+            );
+
+
+        if (!confirmar) {
+            return;
+        }
+
+
+        try {
+
+            await apiFetch(
+                `${CONFIG.ENDPOINTS.categorias}/${id}`,
+                {
+                    method: "DELETE"
+                }
+            );
+
+
+            mostrarToast(
+                "Categoría eliminada correctamente."
+            );
+
+
+            await cargarCategorias();
+
+
+            cargarCategoriasSelect();
+
+
+        } catch (error) {
+
+            console.error(
+                "Error eliminando categoría:",
+                error
+            );
+
+
+            mostrarToast(
+                error.message ||
+                "No se pudo eliminar la categoría."
+            );
+
+        }
+
+    };
+
+
+    // ==========================================
+    // EVENTOS MODAL CATEGORÍAS
+    // ==========================================
+
+    document
+        .getElementById(
+            "newCategoryButton"
+        )
+        ?.addEventListener(
+            "click",
+            () => abrirModalCategoria()
+        );
+
+
+    document
+        .getElementById(
+            "closeCategoryModal"
+        )
+        ?.addEventListener(
+            "click",
+            cerrarModalCategoria
+        );
+
+
+    document
+        .getElementById(
+            "cancelCategory"
+        )
+        ?.addEventListener(
+            "click",
+            cerrarModalCategoria
+        );
+
+
+    document
+        .getElementById(
+            "categoryForm"
+        )
+        ?.addEventListener(
+            "submit",
+            guardarCategoria
+        );
+
+
+    document
+        .getElementById(
+            "categoryModal"
+        )
+        ?.addEventListener(
+            "click",
+            event => {
+
+                if (
+                    event.target ===
+                    document.getElementById(
+                        "categoryModal"
+                    )
+                ) {
+
+                    cerrarModalCategoria();
+
+                }
+
+            }
+        );
 
 
     // ==========================================
@@ -692,11 +1227,16 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
 
             return;
+
         }
 
 
         container.innerHTML =
             talles.map(talle => {
+
+                const activo =
+                    talle.activo;
+
 
                 return `
                     <div class="simple-card">
@@ -708,28 +1248,477 @@ document.addEventListener("DOMContentLoaded", () => {
                             </div>
 
                             <span class="status-badge ${
-                                talle.activo
+                                activo
                                     ? "status-active"
                                     : "status-inactive"
                             }">
+
                                 ${
-                                    talle.activo
+                                    activo
                                         ? "Activo"
                                         : "Inactivo"
                                 }
+
                             </span>
 
                         </div>
+
 
                         <p>
                             Talle #${talle.id}
                         </p>
 
+
+                        <div class="simple-card-actions">
+
+                            <button
+                                type="button"
+                                class="secondary-button"
+                                onclick="editarTalle(${talle.id})"
+                            >
+                                ✎ Editar
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="icon-button delete"
+                                onclick="eliminarTalle(${talle.id})"
+                                title="Eliminar"
+                            >
+                                ×
+                            </button>
+
+                        </div>
+
                     </div>
                 `;
 
             }).join("");
+
     }
+
+    // ==========================================
+    // CRUD TALLES
+    // ==========================================
+
+    let talleEditando = null;
+
+
+    const sizeModal =
+        document.getElementById("sizeModal");
+
+    const sizeForm =
+        document.getElementById("sizeForm");
+
+
+    function abrirModalTalle(talle = null) {
+
+        talleEditando = talle;
+
+        const errorElement =
+            document.getElementById(
+                "sizeFormError"
+            );
+
+        errorElement.textContent = "";
+        errorElement.classList.remove("active");
+
+
+        if (talle) {
+
+            document.getElementById(
+                "sizeModalTitle"
+            ).textContent =
+                "Editar talle";
+
+
+            document.getElementById(
+                "sizeId"
+            ).value =
+                talle.id;
+
+
+            document.getElementById(
+                "sizeName"
+            ).value =
+                talle.nombre || "";
+
+
+            document.getElementById(
+                "sizeActive"
+            ).checked =
+                talle.activo;
+
+        } else {
+
+            sizeForm.reset();
+
+
+            document.getElementById(
+                "sizeModalTitle"
+            ).textContent =
+                "Nuevo talle";
+
+
+            document.getElementById(
+                "sizeId"
+            ).value =
+                "";
+
+
+            document.getElementById(
+                "sizeActive"
+            ).checked =
+                true;
+
+        }
+
+
+        sizeModal.classList.add("active");
+
+
+        setTimeout(() => {
+
+            document.getElementById(
+                "sizeName"
+            ).focus();
+
+        }, 100);
+
+    }
+
+
+    function cerrarModalTalle() {
+
+        sizeModal.classList.remove("active");
+
+        talleEditando = null;
+
+    }
+
+
+    async function guardarTalle(event) {
+
+        event.preventDefault();
+
+
+        const nombre =
+            document.getElementById(
+                "sizeName"
+            ).value.trim();
+
+
+        const activo =
+            document.getElementById(
+                "sizeActive"
+            ).checked;
+
+
+        const errorElement =
+            document.getElementById(
+                "sizeFormError"
+            );
+
+
+        errorElement.textContent = "";
+        errorElement.classList.remove("active");
+
+
+        if (!nombre) {
+
+            errorElement.textContent =
+                "El nombre del talle es obligatorio.";
+
+            errorElement.classList.add("active");
+
+            return;
+
+        }
+
+
+        const talleDuplicado =
+            talles.some(talle => {
+
+                const mismoNombre =
+                    talle.nombre
+                        ?.trim()
+                        .toLowerCase() ===
+                    nombre.toLowerCase();
+
+                const mismoId =
+                    talleEditando &&
+                    Number(talle.id) ===
+                    Number(talleEditando.id);
+
+                return mismoNombre && !mismoId;
+
+            });
+
+
+        if (talleDuplicado) {
+
+            errorElement.textContent =
+                "Ya existe un talle con ese nombre.";
+
+            errorElement.classList.add("active");
+
+            return;
+
+        }
+
+
+        const datos = {
+            nombre: nombre,
+            activo: activo
+        };
+
+
+        const boton =
+            document.getElementById(
+                "saveSizeButton"
+            );
+
+
+        const textoOriginal =
+            boton.textContent;
+
+
+        boton.disabled = true;
+        boton.textContent = "Guardando...";
+
+
+        try {
+
+            if (talleEditando) {
+
+                await apiFetch(
+                    `${CONFIG.ENDPOINTS.talles}/${talleEditando.id}`,
+                    {
+                        method: "PUT",
+                        body: JSON.stringify(datos)
+                    }
+                );
+
+
+                mostrarToast(
+                    "Talle actualizado correctamente."
+                );
+
+            } else {
+
+                await apiFetch(
+                    CONFIG.ENDPOINTS.talles,
+                    {
+                        method: "POST",
+                        body: JSON.stringify(datos)
+                    }
+                );
+
+
+                mostrarToast(
+                    "Talle creado correctamente."
+                );
+
+            }
+
+
+            cerrarModalTalle();
+
+            await cargarTalles();
+
+
+            /*
+            * Actualizamos los selects de variantes
+            * para que reflejen inmediatamente
+            * los talles activos.
+            */
+            cargarTallesVariantSelect();
+
+
+        } catch (error) {
+
+            console.error(
+                "Error guardando talle:",
+                error
+            );
+
+
+            errorElement.textContent =
+                error.message ||
+                "No se pudo guardar el talle.";
+
+
+            errorElement.classList.add(
+                "active"
+            );
+
+        } finally {
+
+            boton.disabled = false;
+
+            boton.textContent =
+                textoOriginal;
+
+        }
+
+    }
+
+
+    window.editarTalle =
+    function(id) {
+
+        const talle =
+            talles.find(
+                item =>
+                    Number(item.id) ===
+                    Number(id)
+            );
+
+
+        if (!talle) {
+
+            mostrarToast(
+                "No se encontró el talle."
+            );
+
+            return;
+
+        }
+
+
+        abrirModalTalle(talle);
+
+    };
+
+
+    window.eliminarTalle =
+    async function(id) {
+
+        const talle =
+            talles.find(
+                item =>
+                    Number(item.id) ===
+                    Number(id)
+            );
+
+
+        if (!talle) {
+
+            mostrarToast(
+                "No se encontró el talle."
+            );
+
+            return;
+
+        }
+
+
+        const confirmar =
+            confirm(
+                `¿Querés eliminar el talle "${talle.nombre}"?`
+            );
+
+
+        if (!confirmar) {
+            return;
+        }
+
+
+        try {
+
+            await apiFetch(
+                `${CONFIG.ENDPOINTS.talles}/${id}`,
+                {
+                    method: "DELETE"
+                }
+            );
+
+
+            mostrarToast(
+                "Talle eliminado correctamente."
+            );
+
+
+            await cargarTalles();
+
+
+            cargarTallesVariantSelect();
+
+
+        } catch (error) {
+
+            console.error(
+                "Error eliminando talle:",
+                error
+            );
+
+
+            mostrarToast(
+                error.message ||
+                "No se pudo eliminar el talle."
+            );
+
+        }
+
+    };
+
+
+    // ==========================================
+    // EVENTOS MODAL TALLES
+    // ==========================================
+
+    document
+        .getElementById("newSizeButton")
+        ?.addEventListener(
+            "click",
+            () => abrirModalTalle()
+        );
+
+
+    document
+        .getElementById("closeSizeModal")
+        ?.addEventListener(
+            "click",
+            cerrarModalTalle
+        );
+
+
+    document
+        .getElementById("cancelSize")
+        ?.addEventListener(
+            "click",
+            cerrarModalTalle
+        );
+
+
+    document
+        .getElementById("sizeForm")
+        ?.addEventListener(
+            "submit",
+            guardarTalle
+        );
+
+
+    document
+        .getElementById("sizeModal")
+        ?.addEventListener(
+            "click",
+            event => {
+
+                if (
+                    event.target ===
+                    document.getElementById(
+                        "sizeModal"
+                    )
+                ) {
+
+                    cerrarModalTalle();
+
+                }
+
+            }
+        );
 
 
     // ==========================================

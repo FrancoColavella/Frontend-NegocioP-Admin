@@ -3030,3 +3030,153 @@ td {
     color: var(--text-secondary);
     font-size: 12px;
 }
+
+/* ==========================================
+   CRUD TALLES
+========================================== */
+
+.small-modal {
+    max-width: 520px;
+}
+
+
+.simple-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    margin-top: 18px;
+    padding-top: 14px;
+
+    border-top: 1px solid var(--border);
+}
+
+
+.simple-card-actions .secondary-button {
+    flex: 1;
+}
+
+
+#sizeForm {
+    padding-top: 4px;
+}
+
+
+#sizeName {
+    width: 100%;
+}
+
+
+#sizeFormError {
+    margin-top: 14px;
+}
+
+
+#saveSizeButton:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+/* ==========================================
+   CRUD CATEGORÍAS
+========================================== */
+
+#categoryForm {
+    padding-top: 4px;
+}
+
+
+#categoryDescription {
+    width: 100%;
+    min-height: 100px;
+    resize: vertical;
+}
+
+
+#categoryFormError {
+    margin-top: 14px;
+}
+
+
+#saveCategoryButton:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+
+.simple-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    margin-top: 18px;
+    padding-top: 14px;
+
+    border-top: 1px solid var(--border-color);
+}
+
+
+.simple-card-actions .secondary-button {
+    flex: 1;
+}
+
+/* ==========================================
+   ESPACIADO INTERNO DE LOS MODALES
+========================================== */
+
+.modal > form {
+    padding: 0 24px 24px;
+}
+
+
+/* Separación entre los campos */
+
+.modal > form .form-group {
+    margin-bottom: 18px;
+}
+
+
+/* Labels */
+
+.modal > form .form-group label {
+    display: block;
+    margin-bottom: 7px;
+}
+
+
+/* Inputs y textarea */
+
+.modal > form input[type="text"],
+.modal > form input[type="number"],
+.modal > form input[type="url"],
+.modal > form textarea {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+
+/* Checkbox / estado */
+
+.modal > form .form-check {
+    margin-top: 6px;
+}
+
+
+/* Error */
+
+.modal > form .form-error {
+    margin-top: 14px;
+}
+
+
+/* Footer */
+
+.modal > form .modal-footer {
+    margin-left: -24px;
+    margin-right: -24px;
+    margin-bottom: -24px;
+
+    padding: 18px 24px 20px;
+
+    border-top: 1px solid var(--border-color);
+}

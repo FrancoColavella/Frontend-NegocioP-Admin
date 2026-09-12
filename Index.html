@@ -528,6 +528,13 @@
                         Categorías disponibles en tu tienda.
                     </p>
                 </div>
+                <button
+                    class="primary-button"
+                    id="newCategoryButton"
+                    type="button"
+                >
+                    + Nueva categoría
+                </button>
 
             </div>
 
@@ -567,6 +574,14 @@
                         Administrá los talles disponibles.
                     </p>
                 </div>
+
+                <button
+                    class="primary-button"
+                    id="newSizeButton"
+                    type="button"
+                >
+                    + Nuevo talle
+                </button>
 
             </div>
 
@@ -1810,6 +1825,130 @@
 </div>
 
 <!-- ==========================================
+     MODAL CATEGORÍA
+========================================== -->
+
+<div
+    class="modal-overlay"
+    id="categoryModal"
+>
+
+    <div class="modal small-modal">
+
+        <div class="modal-header">
+
+            <div>
+
+                <span class="modal-kicker">
+                    Catálogo
+                </span>
+
+                <h2 id="categoryModalTitle">
+                    Nueva categoría
+                </h2>
+
+            </div>
+
+            <button
+                class="modal-close"
+                id="closeCategoryModal"
+                type="button"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="categoryForm">
+
+            <input
+                type="hidden"
+                id="categoryId"
+            >
+
+
+            <div class="form-group">
+
+                <label for="categoryName">
+                    Nombre
+                </label>
+
+                <input
+                    type="text"
+                    id="categoryName"
+                    placeholder="Ej. Remeras"
+                    maxlength="100"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="categoryDescription">
+                    Descripción
+                </label>
+
+                <textarea
+                    id="categoryDescription"
+                    placeholder="Ej. Remeras y camisetas"
+                    maxlength="255"
+                    rows="4"
+                ></textarea>
+
+            </div>
+
+
+            <div class="form-check">
+
+                <input
+                    type="checkbox"
+                    id="categoryActive"
+                    checked
+                >
+
+                <label for="categoryActive">
+                    Categoría activa
+                </label>
+
+            </div>
+
+
+            <div
+                class="form-error"
+                id="categoryFormError"
+            ></div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    id="cancelCategory"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                    id="saveCategoryButton"
+                >
+                    Guardar categoría
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- ==========================================
      MODAL COLOR
 ========================================== -->
 
@@ -1937,6 +2076,114 @@
                     id="saveColorButton"
                 >
                     Guardar color
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- ==========================================
+     MODAL TALLE
+========================================== -->
+
+<div
+    class="modal-overlay"
+    id="sizeModal"
+>
+
+    <div class="modal small-modal">
+
+        <div class="modal-header">
+
+            <div>
+
+                <span class="modal-kicker">
+                    Variantes
+                </span>
+
+                <h2 id="sizeModalTitle">
+                    Nuevo talle
+                </h2>
+
+            </div>
+
+            <button
+                class="modal-close"
+                id="closeSizeModal"
+                type="button"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="sizeForm">
+
+            <input
+                type="hidden"
+                id="sizeId"
+            >
+
+
+            <div class="form-group">
+
+                <label for="sizeName">
+                    Nombre del talle
+                </label>
+
+                <input
+                    type="text"
+                    id="sizeName"
+                    placeholder="Ej. M"
+                    maxlength="50"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-check">
+
+                <input
+                    type="checkbox"
+                    id="sizeActive"
+                    checked
+                >
+
+                <label for="sizeActive">
+                    Talle activo
+                </label>
+
+            </div>
+
+
+            <div
+                class="form-error"
+                id="sizeFormError"
+            ></div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    id="cancelSize"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    type="submit"
+                    class="primary-button"
+                    id="saveSizeButton"
+                >
+                    Guardar talle
                 </button>
 
             </div>
