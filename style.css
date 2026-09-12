@@ -2569,3 +2569,64 @@ td {
     }
 
 }
+
+.movement-positive {
+    color: #047857;
+    font-weight: 700;
+}
+
+.movement-negative {
+    color: #b91c1c;
+    font-weight: 700;
+}
+
+.movement-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.movement-entrada {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.movement-salida {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.movement-ajuste {
+    background: #fffbeb;
+    color: #b45309;
+}
+
+.movement-venta {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.movement-devolucion {
+    background: #f5f3ff;
+    color: #6d28d9;
+}
+
+.movement-product {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.movement-product strong {
+    font-size: 11px;
+}
+
+.movement-reason {
+    color: var(--text-secondary);
+    font-size: 10px;
+}

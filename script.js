@@ -61,23 +61,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // ==========================================
 
     const sectionNames = {
-
         dashboard: "Dashboard",
-
         productos: "Productos",
-
         categorias: "Categorías",
-
         talles: "Talles",
-
         colores: "Colores",
-
         pedidos: "Pedidos",
-
         stock: "Stock",
-
         movimientos: "Movimientos de stock"
-
     };
 
 
@@ -3572,16 +3563,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
                         <td>
+                            <div class="action-buttons">
 
-                            <button
-                                type="button"
-                                class="icon-button"
-                                title="Guardar stock"
-                                onclick="guardarStockDesdeTabla(${variante.id})"
-                            >
-                                ✓
-                            </button>
+                                <button
+                                    type="button"
+                                    class="icon-button"
+                                    title="Guardar ajuste"
+                                    onclick="guardarStockDesdeTabla(${variante.id})"
+                                >
+                                    ✓
+                                </button>
 
+                                <button
+                                    type="button"
+                                    class="icon-button"
+                                    title="Entrada / salida"
+                                    onclick="abrirMovimientoStock(${variante.id})"
+                                >
+                                    ↕
+                                </button>
+
+                            </div>
                         </td>
 
                     </tr>
@@ -3684,6 +3686,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 !Number.isInteger(stock) ||
                 stock < 0
             ) {
+
                 mostrarToast(
                     "El stock debe ser un número entero mayor o igual a 0."
                 );
@@ -3699,6 +3702,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
 
             if (!variante) {
+
                 mostrarToast(
                     "No se encontró la variante."
                 );
@@ -3709,7 +3713,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const stockAnterior =
                 Number(variante.stock);
 
-            // No hacemos ninguna petición si el stock no cambió.
             if (stockAnterior === stock) {
 
                 mostrarToast(
@@ -3733,7 +3736,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
 
                 mostrarToast(
-                    "Stock actualizado y movimiento registrado."
+                    "Stock actualizado y ajuste registrado."
                 );
 
                 await cargarStock();
@@ -3751,6 +3754,175 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
             }
         };
+
+        // ==========================================
+        // ENTRADA / SALIDA DE STOCK
+        // ==========================================
+
+        window.abrirMovimientoStock =
+            async function(id) {
+
+                const variante =
+                    stockVariantes.find(
+                        item =>
+                            Number(item.id) ===
+                            Number(id)
+                    );
+
+                if (!variante) {
+
+                    mostrarToast(
+                        "No se encontró la variante."
+                    );
+
+                    return;
+                }
+
+                const producto =
+                    variante.producto?.nombre ||
+                    "Sin producto";
+
+                const talle =
+                    variante.talle?.nombre ||
+                    "-";
+
+                const color =
+                    variante.color?.nombre ||
+                    "-";
+
+                const stockActual =
+                    Number(variante.stock);
+
+                const tipo =
+                    window.prompt(
+                        `Movimiento de stock\n\n` +
+                        `${producto}\n` +
+                        `Talle: ${talle}\n` +
+                        `Color: ${color}\n` +
+                        `Stock actual: ${stockActual}\n\n` +
+                        `Escribí ENTRADA o SALIDA:`,
+                        "ENTRADA"
+                    );
+
+                if (tipo === null) {
+                    return;
+                }
+
+                const tipoNormalizado =
+                    tipo.trim().toUpperCase();
+
+                if (
+                    tipoNormalizado !== "ENTRADA" &&
+                    tipoNormalizado !== "SALIDA"
+                ) {
+
+                    mostrarToast(
+                        "El tipo debe ser ENTRADA o SALIDA."
+                    );
+
+                    return;
+                }
+
+                const cantidadTexto =
+                    window.prompt(
+                        `Tipo: ${tipoNormalizado}\n\n` +
+                        `Stock actual: ${stockActual}\n\n` +
+                        `Cantidad:`,
+                        "1"
+                    );
+
+                if (cantidadTexto === null) {
+                    return;
+                }
+
+                const cantidad =
+                    Number(cantidadTexto);
+
+                if (
+                    !Number.isInteger(cantidad) ||
+                    cantidad <= 0
+                ) {
+
+                    mostrarToast(
+                        "La cantidad debe ser un número entero mayor a cero."
+                    );
+
+                    return;
+                }
+
+                if (
+                    tipoNormalizado === "SALIDA" &&
+                    cantidad > stockActual
+                ) {
+
+                    mostrarToast(
+                        `No hay suficiente stock. Stock actual: ${stockActual}`
+                    );
+
+                    return;
+                }
+
+                const motivo =
+                    window.prompt(
+                        `Movimiento: ${tipoNormalizado}\n` +
+                        `Cantidad: ${cantidad}\n\n` +
+                        `Motivo:`,
+                        tipoNormalizado === "ENTRADA"
+                            ? "Ingreso de mercadería"
+                            : "Salida de mercadería"
+                    );
+
+                if (motivo === null) {
+                    return;
+                }
+
+                if (!motivo.trim()) {
+
+                    mostrarToast(
+                        "El motivo es obligatorio."
+                    );
+
+                    return;
+                }
+
+                try {
+
+                    await apiFetch(
+                        `${CONFIG.ENDPOINTS.movimientosStock}/entrada-salida`,
+                        {
+                            method: "POST",
+
+                            body: JSON.stringify({
+                                varianteId: Number(id),
+                                tipo: tipoNormalizado,
+                                cantidad: cantidad,
+                                motivo: motivo.trim()
+                            })
+                        }
+                    );
+
+                    mostrarToast(
+                        `${tipoNormalizado === "ENTRADA"
+                            ? "Entrada"
+                            : "Salida"
+                        } registrada correctamente.`
+                    );
+
+                    await cargarStock();
+
+                } catch (error) {
+
+                    console.error(
+                        "Error registrando movimiento:",
+                        error
+                    );
+
+                    mostrarToast(
+                        error.message ||
+                        "No se pudo registrar el movimiento."
+                    );
+                }
+            };
 
 
     // ==========================================
@@ -4431,6 +4603,496 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 renderMovimientos();
 
+            }
+        );
+
+
+    document
+        .getElementById(
+            "reloadMovimientos"
+        )
+        ?.addEventListener(
+            "click",
+            cargarMovimientos
+        );
+
+
+    // ==========================================
+    // CARGAR MOVIMIENTOS
+    // ==========================================
+
+    async function cargarMovimientos() {
+
+        const tbody =
+            document.getElementById(
+                "movementsTableBody"
+            );
+
+        if (!tbody) {
+            return;
+        }
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9">
+                    <div class="loading">
+                        Cargando movimientos...
+                    </div>
+                </td>
+            </tr>
+        `;
+
+        try {
+
+            movimientosStock =
+                await apiFetch(
+                    CONFIG.ENDPOINTS.movimientosStock
+                );
+
+            renderMovimientos();
+
+        } catch (error) {
+
+            console.error(
+                "Error cargando movimientos:",
+                error
+            );
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9">
+                        <div class="loading">
+                            No se pudieron cargar los movimientos.
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+
+
+    // ==========================================
+    // RENDER MOVIMIENTOS
+    // ==========================================
+
+    function renderMovimientos() {
+
+        const tbody =
+            document.getElementById(
+                "movementsTableBody"
+            );
+
+        if (!tbody) {
+            return;
+        }
+
+        let lista =
+            [...movimientosStock];
+
+        // ================================
+        // BÚSQUEDA
+        // ================================
+
+        if (filtrosMovimientos.busqueda) {
+
+            const texto =
+                filtrosMovimientos.busqueda
+                    .trim()
+                    .toLowerCase();
+
+            lista =
+                lista.filter(movimiento => {
+
+                    const producto =
+                        movimiento.variante
+                            ?.producto
+                            ?.nombre
+                            ?.toLowerCase() || "";
+
+                    const talle =
+                        movimiento.variante
+                            ?.talle
+                            ?.nombre
+                            ?.toLowerCase() || "";
+
+                    const color =
+                        movimiento.variante
+                            ?.color
+                            ?.nombre
+                            ?.toLowerCase() || "";
+
+                    const motivo =
+                        movimiento.motivo
+                            ?.toLowerCase() || "";
+
+                    const tipo =
+                        movimiento.tipo
+                            ?.toLowerCase() || "";
+
+                    return (
+                        producto.includes(texto) ||
+                        talle.includes(texto) ||
+                        color.includes(texto) ||
+                        motivo.includes(texto) ||
+                        tipo.includes(texto)
+                    );
+                });
+        }
+
+
+        // ================================
+        // TIPO
+        // ================================
+
+        if (filtrosMovimientos.tipo) {
+
+            lista =
+                lista.filter(
+                    movimiento =>
+                        movimiento.tipo ===
+                        filtrosMovimientos.tipo
+                );
+        }
+
+
+        // ================================
+        // ORDENAR POR FECHA
+        // ================================
+
+        lista.sort(
+            (a, b) =>
+                new Date(b.fecha) -
+                new Date(a.fecha)
+        );
+
+
+        actualizarEstadisticasMovimientos();
+
+
+        if (!lista.length) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9">
+
+                        <div class="stock-empty-state">
+
+                            <div>
+                                ↕
+                            </div>
+
+                            <strong>
+                                No hay movimientos
+                            </strong>
+
+                            <span>
+                                No encontramos movimientos con los filtros seleccionados.
+                            </span>
+
+                        </div>
+
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        tbody.innerHTML =
+            lista.map(movimiento => {
+
+                const variante =
+                    movimiento.variante;
+
+                const producto =
+                    variante?.producto?.nombre ||
+                    "Sin producto";
+
+                const talle =
+                    variante?.talle?.nombre ||
+                    "-";
+
+                const color =
+                    variante?.color?.nombre ||
+                    "-";
+
+                const codigoHex =
+                    variante?.color?.codigoHex ||
+                    "#cccccc";
+
+                const tipo =
+                    movimiento.tipo ||
+                    "";
+
+                const cantidad =
+                    Number(
+                        movimiento.cantidad || 0
+                    );
+
+                const signo =
+                    obtenerSignoMovimiento(
+                        tipo
+                    );
+
+                const tipoClase =
+                    tipo.toLowerCase();
+
+                const tipoTexto =
+                    formatearTipoMovimiento(
+                        tipo
+                    );
+
+                const fecha =
+                    formatearFechaMovimiento(
+                        movimiento.fecha
+                    );
+
+                return `
+                    <tr>
+
+                        <td>
+                            ${fecha}
+                        </td>
+
+                        <td>
+                            <span
+                                class="
+                                    movement-badge
+                                    movement-${tipoClase}
+                                "
+                            >
+                                ${tipoTexto}
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="movement-product">
+
+                                <strong>
+                                    ${escapeHtml(producto)}
+                                </strong>
+
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="stock-size">
+                                ${escapeHtml(talle)}
+                            </span>
+                        </td>
+
+                        <td>
+
+                            <div class="stock-color">
+
+                                <span
+                                    class="stock-color-dot"
+                                    style="
+                                        background:${escapeHtml(
+                                            codigoHex
+                                        )}
+                                    "
+                                ></span>
+
+                                ${escapeHtml(color)}
+
+                            </div>
+
+                        </td>
+
+                        <td>
+
+                            <span
+                                class="
+                                    movement-quantity
+                                    ${signo === "+"
+                                        ? "movement-positive"
+                                        : "movement-negative"
+                                    }
+                                "
+                            >
+                                ${signo}${cantidad}
+                            </span>
+
+                        </td>
+
+                        <td>
+                            ${movimiento.stockAnterior}
+                        </td>
+
+                        <td>
+                            ${movimiento.stockPosterior}
+                        </td>
+
+                        <td>
+
+                            <span class="movement-reason">
+                                ${escapeHtml(
+                                    movimiento.motivo ||
+                                    "-"
+                                )}
+                            </span>
+
+                        </td>
+
+                    </tr>
+                `;
+
+            }).join("");
+    }
+
+
+    // ==========================================
+    // ESTADÍSTICAS
+    // ==========================================
+
+    function actualizarEstadisticasMovimientos() {
+
+        document.getElementById(
+            "movimientosTotal"
+        ).textContent =
+            movimientosStock.length;
+
+
+        document.getElementById(
+            "movimientosVentas"
+        ).textContent =
+            movimientosStock.filter(
+                movimiento =>
+                    movimiento.tipo ===
+                    "VENTA"
+            ).length;
+
+
+        document.getElementById(
+            "movimientosDevoluciones"
+        ).textContent =
+            movimientosStock.filter(
+                movimiento =>
+                    movimiento.tipo ===
+                    "DEVOLUCION"
+            ).length;
+
+
+        document.getElementById(
+            "movimientosEntradas"
+        ).textContent =
+            movimientosStock.filter(
+                movimiento =>
+                    movimiento.tipo ===
+                    "ENTRADA"
+            ).length;
+    }
+
+
+    // ==========================================
+    // FORMATEAR TIPO
+    // ==========================================
+
+    function formatearTipoMovimiento(tipo) {
+
+        const tipos = {
+            ENTRADA: "Entrada",
+            SALIDA: "Salida",
+            AJUSTE: "Ajuste",
+            VENTA: "Venta",
+            DEVOLUCION: "Devolución"
+        };
+
+        return tipos[tipo] || tipo;
+    }
+
+
+    // ==========================================
+    // SIGNO
+    // ==========================================
+
+    function obtenerSignoMovimiento(tipo) {
+
+        if (
+            tipo === "ENTRADA" ||
+            tipo === "DEVOLUCION"
+        ) {
+            return "+";
+        }
+
+        if (
+            tipo === "SALIDA" ||
+            tipo === "VENTA"
+        ) {
+            return "-";
+        }
+
+        return "";
+    }
+
+
+    // ==========================================
+    // FECHA
+    // ==========================================
+
+    function formatearFechaMovimiento(
+        fecha
+    ) {
+
+        if (!fecha) {
+            return "-";
+        }
+
+        const date =
+            new Date(fecha);
+
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
+        ) {
+            return fecha;
+        }
+
+        return new Intl.DateTimeFormat(
+            "es-AR",
+            {
+                dateStyle: "short",
+                timeStyle: "short"
+            }
+        ).format(date);
+    }
+
+
+    // ==========================================
+    // EVENTOS
+    // ==========================================
+
+    document
+        .getElementById(
+            "movementSearch"
+        )
+        ?.addEventListener(
+            "input",
+            event => {
+
+                filtrosMovimientos.busqueda =
+                    event.target.value;
+
+                renderMovimientos();
+            }
+        );
+
+
+    document
+        .getElementById(
+            "movementTypeFilter"
+        )
+        ?.addEventListener(
+            "change",
+            event => {
+
+                filtrosMovimientos.tipo =
+                    event.target.value;
+
+                renderMovimientos();
             }
         );
 
